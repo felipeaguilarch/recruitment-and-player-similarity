@@ -1,0 +1,15 @@
+# Theme for the deployed app. Keeping this in the repo means the app has an
+# identity rather than Streamlit's default palette - which matters when the
+# audience is non-technical.
+[theme]
+base = "light"
+primaryColor = "#0F6B4A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F4F1"
+textColor = "#111614"
+font = "sans serif"
+
+[server]
+# The app only ever reads committed parquet files, so there is nothing to
+# upload and no reason to allow it.
+maxUploadSize = 1

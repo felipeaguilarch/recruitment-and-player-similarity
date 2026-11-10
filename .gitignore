@@ -1,0 +1,33 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# --- Data ---
+# Raw downloads are large (the Transfermarkt zip alone is ~240 MB) and are
+# fully reproducible from `python run_pipeline.py --stage fetch-*`, so they
+# stay out of git.
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# Processed artefacts ARE committed - the deployed app reads them directly and
+# Streamlit Community Cloud has no way to run the pipeline. Keep them small.
+# If a file here approaches 100 MB, drop unused columns before writing it.
+!data/processed/
+!data/processed/*.parquet
+
+# soccerdata's own HTML cache, if someone points SOCCERDATA_DIR into the repo
+soccerdata/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

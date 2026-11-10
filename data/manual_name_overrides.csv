@@ -1,0 +1,17 @@
+# Hand-resolved FBref -> Transfermarkt matches.
+#
+# The fuzzy join writes everything it is unsure about to
+# reports/name_match_review.csv. Adjudicate those rows here and they will be
+# applied on the next `--stage merge --force`, taking precedence over any
+# fuzzy result.
+#
+# Find a tm_player_id from the player's Transfermarkt URL:
+#   transfermarkt.com/erling-haaland/profil/spieler/418560  ->  418560
+#
+# fbref_player must be the name exactly as FBref renders it; matching is done
+# on the normalised form, so accents and punctuation do not have to be exact.
+#
+# Delete these two examples once you add real rows - they are illustrative and
+# the IDs are not guaranteed correct.
+fbref_player,tm_player_id,note
+Example Player,0,"delete me - placeholder showing the column layout"
