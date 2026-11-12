@@ -64,10 +64,23 @@ def flatten_columns(df: pd.DataFrame, stat_type: str) -> pd.DataFrame:
 
         names: list[str] = []
         for upper, lower in out.columns:
-                group = snake(upper)
-                if not group or group.startswith("unnamed"):
+                group, stat = snake(upper), snake(lower)
+
+                # FBref's identity columns arrive in BOTH shapes, depending on
+                # whether soccerdata's standardize_colnames left the name in
+                # level 0 or level 1:
+                #     ('Age', '')                  -> level 1 empty
+                #     ('Unnamed: 5_level_0', 'pos') -> level 0 a placeholder
+                # Both are flat columns, so both must land as
+                # `{stat_type}__flat__{name}`. Handling only the second shape
+                # produced `standard__age__`, which no pattern in config.py
+                # matches and which merge.py then fails to find.
+                if not stat:
+                        group, stat = "flat", group
+                elif not group or group.startswith("unnamed"):
                         group = "flat"
-                names.append(f"{stat_type}__{group}__{snake(lower)}")
+
+                names.append(f"{stat_type}__{group}__{stat}")
         out.columns = names
         return out
 
@@ -78,20 +91,59 @@ def _reader() -> FBrefWide:
         return cls(leagues=config.LEAGUES, seasons=config.SEASONS)
 
 
+#: How many times to rebuild the browser and retry one stat type.
+BROWSER_ATTEMPTS = 3
+
+
+def _read_with_fresh_browser(stat_type: str) -> pd.DataFrame:
+        """Fetch one stat type, rebuilding the browser on each attempt.
+
+        FBref sits behind Cloudflare, so soccerdata drives a real Chrome via
+        SeleniumBase (FBref inherits BaseSeleniumReader - there is no
+        requests-based path). That browser dies fairly often on Windows, and
+        when it does you get:
+
+            MaxRetryError: HTTPConnectionPool(host='localhost', port=...)
+            ... /session/<id>/source ... WinError 10061 actively refused it
+
+        soccerdata has its own retry ("attempt 1 of 5"), but it only retries
+        the REQUEST - it never rebuilds `self._driver`. So all five attempts
+        hit the same dead session, and because one reader served every stat
+        type, a single crash used to take out the whole run.
+
+        Each attempt here constructs a brand-new reader, and therefore a
+        brand-new browser. Pages already downloaded are served from
+        soccerdata's cache (~/soccerdata), so a retry costs seconds for the
+        work already done and only re-fetches what is genuinely missing.
+        """
+        last: Exception | None = None
+        for attempt in range(1, BROWSER_ATTEMPTS + 1):
+                try:
+                        return _reader().read_player_season_stats(stat_type=stat_type)
+                except Exception as exc:  # noqa: BLE001 - browser death is expected here
+                        last = exc
+                        if attempt < BROWSER_ATTEMPTS:
+                                logger.warning(
+                                        "%s failed (attempt %s/%s): %s. Rebuilding the browser.",
+                                        stat_type, attempt, BROWSER_ATTEMPTS, type(exc).__name__,
+                                )
+        raise last  # type: ignore[misc]
+
+
 def fetch_player_stats() -> pd.DataFrame:
         """Download every configured stat type and join them on the player index."""
-        fbref = _reader()
         frames: list[pd.DataFrame] = []
 
         for stat_type in config.FBREF_STAT_TYPES:
                 logger.info("Fetching FBref player stats: %s", stat_type)
                 try:
-                        raw = fbref.read_player_season_stats(stat_type=stat_type)
+                        raw = _read_with_fresh_browser(stat_type)
                 except Exception as exc:  # noqa: BLE001 - one bad page must not sink the run
                         logger.error(
-                                "Could not fetch %r (%s). Continuing without it; the feature "
-                                "resolution report will show what went missing.",
+                                "Could not fetch %r after %s attempts (%s). Continuing without "
+                                "it; the feature resolution report will show what went missing.",
                                 stat_type,
+                                BROWSER_ATTEMPTS,
                                 exc,
                         )
                         continue
@@ -151,17 +203,41 @@ def write_column_report(df: pd.DataFrame) -> None:
         logger.info("Wrote column inventory to %s", paths.FBREF_COLUMNS)
 
 
+def parquet_safe(df: pd.DataFrame) -> pd.DataFrame:
+        """Make every `object` column writable by pyarrow.
+
+        FBref's tables arrive as HTML text, so a column can hold a mix of
+        numeric-looking strings and genuinely non-numeric ones. pyarrow infers
+        a type from the leading values and then fails on the first that does
+        not fit:
+
+            ArrowInvalid: Could not convert '29-034' with type str:
+            tried to convert to int64
+            Conversion failed for column standard__age__
+
+        '29-034' is FBref's years-days age format. Storing these as `string`
+        keeps the raw text intact for merge.parse_fbref_age() and
+        merge.to_numeric() to interpret later - which is the right division of
+        labour, since this module's job is to fetch faithfully, not to clean.
+        """
+        objects = [c for c in df.columns if df[c].dtype == object]
+        if objects:
+                logger.info("Casting %s object columns to string for parquet", len(objects))
+                df = df.astype({c: "string" for c in objects})
+        return df
+
+
 def run(force: bool = False) -> pd.DataFrame:
         paths.ensure_dirs()
         if paths.FBREF_WIDE.exists() and not force:
                 logger.info("%s exists; use --force to refetch.", paths.FBREF_WIDE)
                 return pd.read_parquet(paths.FBREF_WIDE)
 
-        players = fetch_player_stats()
+        players = parquet_safe(fetch_player_stats())
         players.to_parquet(paths.FBREF_WIDE)
         write_column_report(players)
 
-        teams = fetch_team_stats()
+        teams = parquet_safe(fetch_team_stats())
         teams.to_parquet(paths.FBREF_TEAM)
 
         logger.info("Wrote %s and %s", paths.FBREF_WIDE, paths.FBREF_TEAM)

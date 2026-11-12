@@ -1,0 +1,15 @@
+{
+  "total": 4140,
+  "matched": 3906,
+  "match_rate": 0.9434782608695652,
+  "decisions": {
+    "accepted": 3906,
+    "no_candidates": 128,
+    "rejected": 62,
+    "review": 44
+  },
+  "thresholds": {
+    "accept": 90,
+    "reject": 80
+  }
+}

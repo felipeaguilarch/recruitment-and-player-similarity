@@ -67,21 +67,32 @@ def extract_tables() -> dict[str, pd.DataFrame]:
         `game_lineups` (3.17M rows). Extracting only what the pipeline reads keeps
         data/raw from ballooning.
         """
-        wanted = {name: None for name in config.TM_TABLES}
         frames: dict[str, pd.DataFrame] = {}
 
         with zipfile.ZipFile(paths.TM_ZIP) as zf:
                 members = {member.filename.rsplit("/", 1)[-1]: member for member in zf.infolist()}
-                for name in wanted:
-                        filename = f"{name}.csv"
-                        if filename not in members:
-                                available = sorted(n for n in members if n.endswith(".csv"))
-                                raise FileNotFoundError(
-                                        f"{filename} not in archive. Available: {available}"
+
+                for name in config.TM_TABLES:
+                        # The archive ships gzipped CSVs (`players.csv.gz`), not plain
+                        # ones. Both spellings are accepted so this keeps working if
+                        # upstream changes its mind - the project has already been
+                        # caught out once by assuming a format without checking.
+                        candidates = [f"{name}.csv.gz", f"{name}.csv"]
+                        filename = next((c for c in candidates if c in members), None)
+                        if filename is None:
+                                available = sorted(
+                                        n for n in members if n.endswith((".csv", ".csv.gz"))
                                 )
+                                raise FileNotFoundError(
+                                        f"None of {candidates} in archive. Available: {available}"
+                                )
+
                         logger.info("Extracting %s", filename)
+                        compression = "gzip" if filename.endswith(".gz") else None
                         with zf.open(members[filename]) as fh:
-                                frames[name] = pd.read_csv(fh, low_memory=False)
+                                frames[name] = pd.read_csv(
+                                        fh, low_memory=False, compression=compression
+                                )
                         logger.info("  -> %s rows", len(frames[name]))
 
         return frames

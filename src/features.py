@@ -78,7 +78,56 @@ def resolve_features(columns: list[str]) -> tuple[dict[str, str], pd.DataFrame]:
                 logger.warning the list of misses.
         TODO 5. Return (resolved, report) - tests unpack both.
         """
-        raise NotImplementedError("features.resolve_features")
+        resolved: dict[str, str] = {}
+        rows: list[dict[str,object]] = []
+
+        for feature_name, feature in config.FEATURES.items():
+                matched_column = ""
+                matched_pattern = ""
+                status = "MISSING"
+
+                for pattern in feature.patterns:
+                        candidates = sorted(
+                                c for c in columns if re.match(pattern, c)
+                        )
+
+                        if candidates:
+                                matched_column = candidates[0]
+                                matched_pattern = pattern
+                                status = "ok"
+                                resolved[feature_name] = matched_column
+                                break
+
+                rows.append({
+                        "feature": feature_name,
+                        "status": status,
+                        "column": matched_column,
+                        "matched_pattern": matched_pattern,
+                        "patterns_tried": " | ".join(feature.patterns),
+                        "per90": feature.per90,
+                        "possession_adjusted": feature.padj,
+                })
+
+        report = pd.DataFrame(rows,
+                              columns=[
+                                        "feature", 
+                                        "status", 
+                                        "column",
+                                        "matched_pattern", 
+                                        "patterns_tried",
+                                        "per90", 
+                                        "possession_adjusted"
+                              ])
+
+        missing = report.loc[report["status"] == "MISSING", "feature"].tolist()
+
+        if missing:
+                logger.warning("Unresolved feature patterns: %s", ", ".join(missing))
+
+        paths.FEATURE_RESOLUTION.parent.mkdir(parents=True, exist_ok=True)
+        report.to_csv(paths.FEATURE_RESOLUTION, index=False)
+
+        return resolved, report                
 
 
 def effective_group_specs(resolved: dict[str, str]) -> dict[str, list[str]]:
@@ -93,7 +142,28 @@ def effective_group_specs(resolved: dict[str, str]) -> dict[str, list[str]]:
                 drops below ~6 usable features - at that point its profile is
                 not worth trusting.
         """
-        raise NotImplementedError("features.effective_group_specs")
+
+        effective: dict[str, list[str]] = {}
+
+        for group, spec in config.GROUP_SPECS.items():
+
+                usable = [feature for feature in spec.features if feature in resolved]
+                trash = [feature for feature in spec.features if feature not in resolved]
+
+                if trash:
+                        logger.warning(
+                                "Group %s lost features: %s", group, ", ".join(trash)
+                        )
+
+                if len(usable) < 6:
+                        logger.error(
+                                "Group %s has only %d usable features after resolution: %s",
+                                group, len(usable), usable
+                        )
+
+                effective[group] = usable
+
+        return effective
 
 
 def available_group_specs(columns: list[str]) -> dict[str, list[str]]:
@@ -112,7 +182,13 @@ def available_group_specs(columns: list[str]) -> dict[str, list[str]]:
         TODO: filter each config.GROUP_SPECS[group].features by membership in
               set(columns). No regex involved.
         """
-        raise NotImplementedError("features.available_group_specs")
+        available: dict[str, list[str]] = {}
+
+        for group, spec in config.GROUP_SPECS.items():
+                usable = [feature for feature in spec.features if feature in columns]
+                available[group] = usable
+
+        return available
 
 
 def possession_factor(team_possession: pd.Series) -> pd.Series:
@@ -131,7 +207,10 @@ def possession_factor(team_possession: pd.Series) -> pd.Series:
                 failed to join.
         TODO 4. .clip(lower=0.5, upper=2.0) so one freak row cannot dominate.
         """
-        raise NotImplementedError("features.possession_factor")
+        defensive_share = 100 - team_possession
+        factor = 50 / defensive_share.where(defensive_share > 5, np.nan)
+        factor = factor.fillna(1.0).clip(lower=0.5, upper=2.0)
+        return factor
 
 
 def build(df: pd.DataFrame, resolved: dict[str, str]) -> pd.DataFrame:
@@ -147,7 +226,26 @@ def build(df: pd.DataFrame, resolved: dict[str, str]) -> pd.DataFrame:
                 after. An inf will survive all the way into StandardScaler and
                 poison an entire position group.
         """
-        raise NotImplementedError("features.build")
+        # Intersect rather than index directly: ID_COLUMNS lists everything the
+        # output *may* carry, but `foot`, `height_in_cm` and
+        # `country_of_citizenship` only exist when the Transfermarkt join
+        # supplied them. df[ID_COLUMNS] raises KeyError whenever one is absent.
+        output = df[[c for c in ID_COLUMNS if c in df.columns]].copy()
+
+        for feature_name, column in resolved.items():
+                feature = config.FEATURES[feature_name]
+                series = pd.to_numeric(df[column], errors="coerce")
+
+                if feature.per90:
+                        series = series.where(df["nineties"] > 0) / df["nineties"]
+
+                if feature.padj:
+                        series *= possession_factor(df["team_possession"])
+
+                series = series.replace([np.inf, -np.inf], np.nan)
+                output[feature_name] = series
+
+        return output
 
 
 def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.DataFrame:
@@ -168,7 +266,42 @@ def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.D
                 attributes one player's radar to another.
         TODO 4. pd.concat the per-group frames.
         """
-        raise NotImplementedError("features.add_percentiles")
+        frames: list[pd.DataFrame] = []
+
+        for group, names in specs.items():
+                usable = [name for name in names if name in features.columns]
+
+                if not usable:
+                        continue
+
+                group_rows = features.loc[
+                        features["position_group"] == group, 
+                        ["player_season_id", "position_group", "season", *usable]
+                ].copy()
+
+                if group_rows.empty:
+                        continue
+
+                ranked = (
+                        group_rows.groupby("season", observed=True)[usable]
+                        .rank(pct=True, method="max") * 100
+                )
+
+                frame = pd.concat(
+                        [
+                                group_rows[["player_season_id", "position_group"]].reset_index(drop=True),
+                                ranked.reset_index(drop=True)
+                        ],
+                        axis=1
+                )
+
+                frames.append(frame)
+
+        if not frames:
+                return pd.DataFrame(columns=["player_season_id", "position_group"])
+
+        return pd.concat(frames, ignore_index=True)
+
 
 
 def run(force: bool = False) -> pd.DataFrame:
@@ -187,8 +320,50 @@ def run(force: bool = False) -> pd.DataFrame:
                 config.MIN_GROUP_SIZE. Thin groups produce meaningless
                 neighbours and you want to know now, not from the app.
         """
-        raise NotImplementedError("features.run")
 
+        paths.ensure_dirs()
+
+        if paths.FEATURES.exists() and not force:
+                logger.info("Using cached features: %s", paths.FEATURES)
+                return pd.read_parquet(paths.FEATURES)
+
+        try:
+                df = pd.read_parquet(paths.PLAYER_SEASONS)
+        except FileNotFoundError as exc:
+                raise SystemExit(
+                        f"Run 'python run_pipeline.py --stage merge' first"
+                ) from exc
+
+        before = len(df)
+        df = df.loc[df["minutes"] >= INCLUSION_MIN_MINUTES].copy()
+        logger.info(
+                "Feature stage: %d/%d player-seasons survived the minutes filter.",
+                len(df), before
+        )
+
+        resolved, _ = resolve_features(list(df.columns))
+        specs = effective_group_specs(resolved)
+
+        features_frame = build(df, resolved)
+        features_frame.to_parquet(paths.FEATURES, index=False)
+
+        percentiles = add_percentiles(features_frame, specs)
+        percentiles.to_parquet(paths.PERCENTILES, index=False)
+
+        for group, features in specs.items():
+                group_c = int((features_frame["position_group"] == group).sum())
+
+                logger.info("Group %s: %d players after filtering.", group, group_c)
+
+                if group_c < config.MIN_GROUP_SIZE:
+                        logger.warning(
+                                "Group %s is below MIN_GROUP_SIZE (%d < %d).",
+                                group,
+                                group_c,
+                                config.MIN_GROUP_SIZE,
+                        )
+
+        return features_frame
 
 if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

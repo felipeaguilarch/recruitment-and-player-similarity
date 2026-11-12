@@ -141,26 +141,41 @@ def _f(name: str, *patterns: str, per90: bool = True, padj: bool = False, label:
 
 # Registry of every feature any position group can ask for.
 FEATURES: dict[str, Feature] = {f.name: f for f in [
+        # ---------------------------------------------------------------
+        # NOTE (verified 2026-11-11): FBref no longer serves the
+        # expected-goals family (xG / npxG / xAG / xA), the progressive
+        # COUNTS (PrgC / PrgP / PrgR), aerial duels, ball recoveries or
+        # average shot distance. Confirmed by inspecting the raw HTML -
+        # those data-stat attributes are absent from the page, not lost in
+        # parsing. Understat was the planned source for the xG family but is
+        # in maintenance ("We will come back soon").
+        #
+        # Everything below resolves against the real 137-column table.
+        # Where a stat was lost, a documented substitute is used:
+        #   PrgC / PrgP  -> progressive DISTANCE (carries / passes)
+        #   PrgR         -> passes received (possession__flat__rec)
+        #   xG / npxG    -> shot volume + touches in box + SCA
+        #   xA / xAG     -> key passes + passes into box
+        # ---------------------------------------------------------------
+
         # --- volume / output ---
-        _f("npxg", r"^shooting__expected__npxg$", r"^standard__expected__npxg$", label="npxG"),
-        _f("xag", r"^standard__expected__xag$", r"^passing__.*__xag$", label="xAG"),
-        _f("xa", r"^passing__.*__xa$", label="xA"),
         _f("goals", r"^standard__performance__gls$", label="Goals"),
         _f("assists", r"^standard__performance__ast$", label="Assists"),
+        _f("non_pen_goals", r"^standard__performance__g_pk$", label="Non-Pen Goals"),
         _f("shots", r"^shooting__standard__sh$", label="Shots"),
+        _f("shots_on_target", r"^shooting__standard__sot$", label="Shots on Target"),
         _f("shots_on_target_pct", r"^shooting__standard__sot_pct$", per90=False, label="Shot Accuracy %"),
-        _f("npxg_per_shot", r"^shooting__expected__npxg_sh$", per90=False, label="npxG / Shot"),
-        _f("goals_minus_xg", r"^shooting__expected__np_g_xg$", r"^shooting__expected__g_xg$", label="Finishing (G-xG)"),
-        _f("shot_distance", r"^shooting__standard__dist$", per90=False, label="Avg Shot Distance"),
+        _f("goals_per_shot", r"^shooting__standard__g_sh$", per90=False, label="Goals / Shot"),
+        _f("goals_per_sot", r"^shooting__standard__g_sot$", per90=False, label="Goals / Shot on Target"),
 
-        # --- progression ---
-        _f("prog_carries", r"^possession__carries__prgc$", r"^standard__progression__prgc$", label="Prog. Carries"),
-        _f("prog_passes", r"^passing__.*__prgp$", r"^standard__progression__prgp$", label="Prog. Passes"),
-        _f("prog_passes_received", r"^possession__receiving__prgr$", r"^standard__progression__prgr$", label="Prog. Passes Rec."),
+        # --- progression (distance-based; the counts are gone) ---
         _f("prog_carry_distance", r"^possession__carries__prgdist$", label="Prog. Carry Distance"),
         _f("prog_pass_distance", r"^passing__total__prgdist$", label="Prog. Pass Distance"),
+        _f("total_carry_distance", r"^possession__carries__totdist$", label="Carry Distance"),
+        _f("carries", r"^possession__carries__carries$", label="Carries"),
         _f("carries_into_final_third", r"^possession__carries__1_3$", label="Carries into Final 3rd"),
         _f("carries_into_box", r"^possession__carries__cpa$", label="Carries into Box"),
+        _f("passes_received", r"^possession__flat__rec$", label="Passes Received"),
 
         # --- passing ---
         _f("passes_attempted", r"^passing__total__att$", label="Passes Attempted"),
@@ -168,27 +183,34 @@ FEATURES: dict[str, Feature] = {f.name: f for f in [
         _f("pass_completion_short_pct", r"^passing__short__cmp_pct$", per90=False, label="Short Pass %"),
         _f("pass_completion_medium_pct", r"^passing__medium__cmp_pct$", per90=False, label="Medium Pass %"),
         _f("pass_completion_long_pct", r"^passing__long__cmp_pct$", per90=False, label="Long Pass %"),
-        _f("key_passes", r"^passing__.*__kp$", label="Key Passes"),
-        _f("passes_into_final_third", r"^passing__.*__1_3$", label="Passes into Final 3rd"),
-        _f("passes_into_box", r"^passing__.*__ppa$", label="Passes into Box"),
-        _f("crosses_into_box", r"^passing__.*__crspa$", label="Crosses into Box"),
+        _f("long_passes_attempted", r"^passing__long__att$", label="Long Passes"),
+        _f("key_passes", r"^passing__flat__kp$", label="Key Passes"),
+        _f("passes_into_final_third", r"^passing__flat__1_3$", label="Passes into Final 3rd"),
+        _f("passes_into_box", r"^passing__flat__ppa$", label="Passes into Box"),
+        _f("crosses_into_box", r"^passing__flat__crspa$", label="Crosses into Box"),
         _f("crosses", r"^passing_types__pass_types__crs$", r"^misc__performance__crs$", label="Crosses"),
         _f("through_balls", r"^passing_types__pass_types__tb$", label="Through Balls"),
         _f("switches", r"^passing_types__pass_types__sw$", label="Switches"),
+        _f("corners", r"^passing_types__pass_types__ck$", label="Corners"),
+        _f("passes_blocked", r"^passing_types__outcomes__blocks$", label="Passes Blocked"),
 
         # --- creation ---
         _f("sca", r"^gca__sca__sca$", label="Shot-Creating Actions"),
         _f("gca", r"^gca__gca__gca$", label="Goal-Creating Actions"),
+        _f("sca_from_take_ons", r"^gca__sca_types__to$", label="SCA from Take-Ons"),
+        _f("sca_from_dead_balls", r"^gca__sca_types__passdead$", label="SCA from Dead Balls"),
 
         # --- carrying / dribbling ---
         _f("take_ons_attempted", r"^possession__take_ons__att$", label="Take-Ons Attempted"),
         _f("take_ons_succeeded", r"^possession__take_ons__succ$", label="Take-Ons Completed"),
         _f("take_on_success_pct", r"^possession__take_ons__succ_pct$", per90=False, label="Take-On Success %"),
+        _f("times_tackled_pct", r"^possession__take_ons__tkld_pct$", per90=False, label="Tackled on Take-On %"),
         _f("miscontrols", r"^possession__carries__mis$", label="Miscontrols"),
         _f("dispossessed", r"^possession__carries__dis$", label="Dispossessed"),
 
         # --- touches by zone ---
         _f("touches", r"^possession__touches__touches$", label="Touches"),
+        _f("touches_def_pen", r"^possession__touches__def_pen$", label="Touches Own Box"),
         _f("touches_def_third", r"^possession__touches__def_3rd$", label="Touches Def 3rd"),
         _f("touches_mid_third", r"^possession__touches__mid_3rd$", label="Touches Mid 3rd"),
         _f("touches_att_third", r"^possession__touches__att_3rd$", label="Touches Att 3rd"),
@@ -198,24 +220,24 @@ FEATURES: dict[str, Feature] = {f.name: f for f in [
         _f("tackles", r"^defense__tackles__tkl$", padj=True, label="Tackles"),
         _f("tackles_won", r"^defense__tackles__tklw$", r"^misc__performance__tklw$", padj=True, label="Tackles Won"),
         _f("tackles_def_third", r"^defense__tackles__def_3rd$", padj=True, label="Tackles Def 3rd"),
+        _f("tackles_mid_third", r"^defense__tackles__mid_3rd$", padj=True, label="Tackles Mid 3rd"),
         _f("tackles_att_third", r"^defense__tackles__att_3rd$", padj=True, label="Tackles Att 3rd"),
         _f("dribblers_tackled_pct", r"^defense__challenges__tkl_pct$", per90=False, label="Dribblers Tackled %"),
+        _f("challenges_attempted", r"^defense__challenges__att$", padj=True, label="Dribblers Challenged"),
         _f("challenges_lost", r"^defense__challenges__lost$", padj=True, label="Challenges Lost"),
-        _f("interceptions", r"^defense__blocks__int$", r"^misc__performance__int$", padj=True, label="Interceptions"),
-        _f("tackles_plus_interceptions", r"^defense__.*__tkl_int$", padj=True, label="Tackles + Int."),
+        _f("interceptions", r"^defense__flat__int$", r"^misc__performance__int$", padj=True, label="Interceptions"),
+        _f("tackles_plus_interceptions", r"^defense__flat__tkl_int$", padj=True, label="Tackles + Int."),
         _f("blocks", r"^defense__blocks__blocks$", padj=True, label="Blocks"),
         _f("shots_blocked", r"^defense__blocks__sh$", padj=True, label="Shots Blocked"),
-        _f("clearances", r"^defense__.*__clr$", padj=True, label="Clearances"),
-        _f("errors", r"^defense__.*__err$", label="Errors"),
-        _f("ball_recoveries", r"^misc__performance__recov$", padj=True, label="Ball Recoveries"),
+        _f("passes_blocked_def", r"^defense__blocks__pass$", padj=True, label="Passes Blocked (def)"),
+        _f("clearances", r"^defense__flat__clr$", padj=True, label="Clearances"),
+        _f("errors", r"^defense__flat__err$", label="Errors"),
 
-        # --- duels / discipline ---
-        _f("aerials_won", r"^misc__aerial_duels__won$", label="Aerials Won"),
-        _f("aerials_lost", r"^misc__aerial_duels__lost$", label="Aerials Lost"),
-        _f("aerial_win_pct", r"^misc__aerial_duels__won_pct$", per90=False, label="Aerial Win %"),
+        # --- discipline ---
         _f("fouls", r"^misc__performance__fls$", label="Fouls"),
         _f("fouls_drawn", r"^misc__performance__fld$", label="Fouls Drawn"),
         _f("offsides", r"^misc__performance__off$", label="Offsides"),
+        _f("yellow_cards", r"^misc__performance__crdy$", label="Yellow Cards"),
 ]}
 
 
@@ -235,77 +257,78 @@ class GroupSpec:
 
 GROUP_SPECS: dict[str, GroupSpec] = {
         "CB": GroupSpec("CB", features=[
-                "tackles_won", "interceptions", "blocks", "clearances", "aerials_won",
-                "aerial_win_pct", "tackles_def_third", "dribblers_tackled_pct",
-                "prog_passes", "prog_carries", "pass_completion_pct",
-                "pass_completion_long_pct", "passes_into_final_third",
-                "passes_attempted", "errors", "fouls", "ball_recoveries",
+                "tackles_won", "interceptions", "blocks", "shots_blocked", "clearances",
+                "tackles_def_third", "dribblers_tackled_pct", "challenges_attempted",
+                "prog_pass_distance", "prog_carry_distance", "pass_completion_pct",
+                "pass_completion_long_pct", "long_passes_attempted",
+                "passes_into_final_third", "passes_attempted", "touches_def_third",
+                "errors", "fouls",
         ], radar=[
-                "aerial_win_pct", "aerials_won", "tackles_won", "interceptions",
-                "clearances", "blocks", "prog_passes", "prog_carries",
-                "pass_completion_pct",
+                "tackles_won", "interceptions", "clearances", "blocks",
+                "dribblers_tackled_pct", "prog_pass_distance", "prog_carry_distance",
+                "pass_completion_pct", "passes_into_final_third",
         ]),
         "FB": GroupSpec("FB", features=[
-                "crosses_into_box", "crosses", "prog_carries", "prog_carry_distance",
-                "touches_att_third", "key_passes", "xa", "passes_into_box",
-                "tackles_plus_interceptions", "dribblers_tackled_pct", "aerial_win_pct",
-                "pass_completion_pct", "prog_passes_received", "take_ons_attempted",
-                "carries_into_final_third", "miscontrols",
+                "crosses_into_box", "crosses", "prog_carry_distance", "carries_into_final_third",
+                "touches_att_third", "key_passes", "passes_into_box", "take_ons_attempted",
+                "take_on_success_pct", "tackles_plus_interceptions", "dribblers_tackled_pct",
+                "pass_completion_pct", "passes_received", "miscontrols", "tackles_def_third",
+                "sca",
         ], radar=[
-                "crosses_into_box", "xa", "key_passes", "prog_carries",
-                "touches_att_third", "take_ons_attempted",
-                "tackles_plus_interceptions", "dribblers_tackled_pct",
-                "pass_completion_pct",
+                "crosses_into_box", "key_passes", "passes_into_box", "prog_carry_distance",
+                "touches_att_third", "take_ons_attempted", "tackles_plus_interceptions",
+                "dribblers_tackled_pct", "pass_completion_pct",
         ]),
         "DM": GroupSpec("DM", features=[
-                "tackles_plus_interceptions", "tackles_def_third", "ball_recoveries",
-                "passes_attempted", "pass_completion_pct", "prog_passes",
-                "prog_pass_distance", "switches", "touches_mid_third", "fouls",
-                "aerial_win_pct", "blocks", "interceptions", "errors",
-                "passes_into_final_third", "challenges_lost",
+                "tackles_plus_interceptions", "tackles_def_third", "tackles_mid_third",
+                "interceptions", "blocks", "clearances", "passes_attempted",
+                "pass_completion_pct", "prog_pass_distance", "switches", "long_passes_attempted",
+                "touches_mid_third", "touches_def_third", "fouls", "errors",
+                "challenges_lost",
         ], radar=[
-                "tackles_plus_interceptions", "ball_recoveries", "interceptions",
-                "passes_attempted", "pass_completion_pct", "prog_passes",
-                "prog_pass_distance", "aerial_win_pct", "fouls",
+                "tackles_plus_interceptions", "interceptions", "tackles_def_third",
+                "passes_attempted", "pass_completion_pct", "prog_pass_distance",
+                "switches", "touches_mid_third", "fouls",
         ]),
         "CM": GroupSpec("CM", features=[
-                "prog_passes", "passes_into_final_third", "passes_into_box", "sca",
-                "xa", "key_passes", "prog_carries", "prog_carry_distance",
-                "take_ons_succeeded", "tackles_plus_interceptions", "ball_recoveries",
-                "touches_mid_third", "touches_att_third", "pass_completion_pct",
-                "passes_attempted", "carries_into_final_third",
+                "prog_pass_distance", "passes_into_final_third", "passes_into_box", "sca",
+                "key_passes", "prog_carry_distance", "carries_into_final_third",
+                "take_ons_succeeded", "tackles_plus_interceptions", "touches_mid_third",
+                "touches_att_third", "pass_completion_pct", "passes_attempted",
+                "passes_received", "miscontrols", "through_balls",
         ], radar=[
-                "prog_passes", "passes_into_final_third", "sca", "xa",
-                "prog_carries", "take_ons_succeeded", "tackles_plus_interceptions",
-                "ball_recoveries", "pass_completion_pct",
+                "prog_pass_distance", "passes_into_final_third", "sca", "key_passes",
+                "prog_carry_distance", "take_ons_succeeded", "tackles_plus_interceptions",
+                "passes_attempted", "pass_completion_pct",
         ]),
         "AM": GroupSpec("AM", features=[
-                "xa", "key_passes", "sca", "gca", "passes_into_box", "through_balls",
+                "key_passes", "sca", "gca", "passes_into_box", "through_balls",
                 "take_ons_attempted", "take_ons_succeeded", "touches_att_box",
-                "npxg", "shots", "prog_passes_received", "carries_into_box",
-                "miscontrols", "fouls_drawn", "prog_carries",
+                "touches_att_third", "shots", "carries_into_box", "prog_carry_distance",
+                "passes_received", "miscontrols", "fouls_drawn", "sca_from_take_ons",
         ], radar=[
-                "npxg", "xa", "sca", "key_passes", "passes_into_box",
-                "take_ons_succeeded", "touches_att_box", "prog_carries",
+                "shots", "key_passes", "sca", "passes_into_box", "take_ons_succeeded",
+                "touches_att_box", "prog_carry_distance", "carries_into_box",
                 "fouls_drawn",
         ]),
         "W": GroupSpec("W", features=[
-                "npxg", "xa", "shots", "take_ons_attempted", "take_ons_succeeded",
-                "take_on_success_pct", "prog_carries", "touches_att_box", "crosses",
-                "carries_into_box", "miscontrols", "dispossessed", "fouls_drawn",
-                "tackles_att_third", "prog_passes_received", "key_passes",
+                "shots", "key_passes", "take_ons_attempted", "take_ons_succeeded",
+                "take_on_success_pct", "prog_carry_distance", "carries_into_box",
+                "touches_att_box", "touches_att_third", "crosses", "miscontrols",
+                "dispossessed", "fouls_drawn", "tackles_att_third", "passes_received",
+                "sca",
         ], radar=[
-                "npxg", "xa", "shots", "take_ons_attempted", "take_on_success_pct",
-                "prog_carries", "touches_att_box", "crosses", "fouls_drawn",
+                "shots", "key_passes", "sca", "take_ons_attempted", "take_on_success_pct",
+                "prog_carry_distance", "touches_att_box", "crosses", "fouls_drawn",
         ]),
         "ST": GroupSpec("ST", features=[
-                "npxg", "npxg_per_shot", "shots", "shots_on_target_pct",
-                "goals_minus_xg", "touches_att_box", "aerials_won", "aerial_win_pct",
-                "xa", "sca", "prog_passes_received", "ball_recoveries", "fouls_drawn",
-                "miscontrols", "shot_distance", "take_ons_attempted",
+                "shots", "shots_on_target", "shots_on_target_pct", "goals_per_shot",
+                "non_pen_goals", "touches_att_box", "touches_att_third", "key_passes",
+                "sca", "passes_received", "fouls_drawn", "miscontrols", "dispossessed",
+                "take_ons_attempted", "offsides", "carries_into_box",
         ], radar=[
-                "npxg", "npxg_per_shot", "shots", "touches_att_box", "aerial_win_pct",
-                "aerials_won", "xa", "sca", "fouls_drawn",
+                "shots", "shots_on_target_pct", "goals_per_shot", "touches_att_box",
+                "non_pen_goals", "key_passes", "sca", "passes_received", "fouls_drawn",
         ]),
 }
 
@@ -360,17 +383,17 @@ VALUE_CATEGORICAL_FEATURES: list[str] = [
 # comparable across the one pooled regression. Every stat here is available for
 # outfield players in any position.
 VALUE_STAT_FEATURES: list[str] = [
-        "npxg",
-        "xag",
         "shots",
+        "key_passes",
         "sca",
-        "prog_passes",
-        "prog_carries",
-        "prog_passes_received",
+        "gca",
+        "prog_pass_distance",
+        "prog_carry_distance",
+        "passes_received",
         "pass_completion_pct",
+        "passes_into_final_third",
         "tackles_plus_interceptions",
         "interceptions",
-        "aerial_win_pct",
         "touches_att_box",
         "take_ons_succeeded",
 ]

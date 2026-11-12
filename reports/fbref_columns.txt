@@ -1,0 +1,156 @@
+FBref columns actually returned, after flattening.
+Edit the patterns in src/config.py FEATURES to match these.
+
+### defense  (17 columns)
+  defense__blocks__blocks
+  defense__blocks__pass
+  defense__blocks__sh
+  defense__challenges__att
+  defense__challenges__lost
+  defense__challenges__tkl
+  defense__challenges__tkl_pct
+  defense__flat__90s
+  defense__flat__clr
+  defense__flat__err
+  defense__flat__int
+  defense__flat__tkl_int
+  defense__tackles__att_3rd
+  defense__tackles__def_3rd
+  defense__tackles__mid_3rd
+  defense__tackles__tkl
+  defense__tackles__tklw
+
+### gca  (17 columns)
+  gca__flat__90s
+  gca__gca__gca
+  gca__gca__gca90
+  gca__gca_types__def
+  gca__gca_types__fld
+  gca__gca_types__passdead
+  gca__gca_types__passlive
+  gca__gca_types__sh
+  gca__gca_types__to
+  gca__sca__sca
+  gca__sca__sca90
+  gca__sca_types__def
+  gca__sca_types__fld
+  gca__sca_types__passdead
+  gca__sca_types__passlive
+  gca__sca_types__sh
+  gca__sca_types__to
+
+### misc  (13 columns)
+  misc__flat__90s
+  misc__performance__2crdy
+  misc__performance__crdr
+  misc__performance__crdy
+  misc__performance__crs
+  misc__performance__fld
+  misc__performance__fls
+  misc__performance__int
+  misc__performance__off
+  misc__performance__og
+  misc__performance__pkcon
+  misc__performance__pkwon
+  misc__performance__tklw
+
+### passing  (21 columns)
+  passing__flat__1_3
+  passing__flat__90s
+  passing__flat__a_xag
+  passing__flat__ast
+  passing__flat__crspa
+  passing__flat__kp
+  passing__flat__ppa
+  passing__long__att
+  passing__long__cmp
+  passing__long__cmp_pct
+  passing__medium__att
+  passing__medium__cmp
+  passing__medium__cmp_pct
+  passing__short__att
+  passing__short__cmp
+  passing__short__cmp_pct
+  passing__total__att
+  passing__total__cmp
+  passing__total__cmp_pct
+  passing__total__prgdist
+  passing__total__totdist
+
+### passing_types  (16 columns)
+  passing_types__corner_kicks__in
+  passing_types__corner_kicks__out
+  passing_types__corner_kicks__str
+  passing_types__flat__90s
+  passing_types__flat__att
+  passing_types__outcomes__blocks
+  passing_types__outcomes__cmp
+  passing_types__outcomes__off
+  passing_types__pass_types__ck
+  passing_types__pass_types__crs
+  passing_types__pass_types__dead
+  passing_types__pass_types__fk
+  passing_types__pass_types__live
+  passing_types__pass_types__sw
+  passing_types__pass_types__tb
+  passing_types__pass_types__ti
+
+### possession  (21 columns)
+  possession__carries__1_3
+  possession__carries__carries
+  possession__carries__cpa
+  possession__carries__dis
+  possession__carries__mis
+  possession__carries__prgdist
+  possession__carries__totdist
+  possession__flat__90s
+  possession__flat__rec
+  possession__take_ons__att
+  possession__take_ons__succ
+  possession__take_ons__succ_pct
+  possession__take_ons__tkld
+  possession__take_ons__tkld_pct
+  possession__touches__att_3rd
+  possession__touches__att_pen
+  possession__touches__def_3rd
+  possession__touches__def_pen
+  possession__touches__live
+  possession__touches__mid_3rd
+  possession__touches__touches
+
+### shooting  (11 columns)
+  shooting__flat__90s
+  shooting__standard__g_sh
+  shooting__standard__g_sot
+  shooting__standard__gls
+  shooting__standard__pk
+  shooting__standard__pkatt
+  shooting__standard__sh
+  shooting__standard__sh_90
+  shooting__standard__sot
+  shooting__standard__sot_90
+  shooting__standard__sot_pct
+
+### standard  (21 columns)
+  standard__flat__age
+  standard__flat__born
+  standard__flat__nation
+  standard__flat__pos
+  standard__per_90_minutes__ast
+  standard__per_90_minutes__g_a
+  standard__per_90_minutes__g_a_pk
+  standard__per_90_minutes__g_pk
+  standard__per_90_minutes__gls
+  standard__performance__ast
+  standard__performance__crdr
+  standard__performance__crdy
+  standard__performance__g_a
+  standard__performance__g_pk
+  standard__performance__gls
+  standard__performance__pk
+  standard__performance__pkatt
+  standard__playing_time__90s
+  standard__playing_time__min
+  standard__playing_time__mp
+  standard__playing_time__starts
+

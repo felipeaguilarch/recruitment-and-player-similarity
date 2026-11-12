@@ -155,17 +155,23 @@ def isolated_reports(tmp_path, monkeypatch):
 
 def test_resolve_features_reports_misses(isolated_reports):
         tmp_path = isolated_reports
-        resolved, report = resolve_features(["shooting__expected__npxg", "irrelevant__flat__x"])
+        resolved, report = resolve_features(["shooting__standard__sh", "irrelevant__flat__x"])
 
-        assert resolved.get("npxg") == "shooting__expected__npxg"
+        assert resolved.get("shots") == "shooting__standard__sh"
         assert "interceptions" not in resolved
         assert (report["status"] == "MISSING").any()
         assert (tmp_path / "res.csv").exists()
 
 
 def test_resolve_features_disambiguates_repeated_stat_names(isolated_reports):
-        """`int` appears under both defense__blocks and misc__performance."""
+        """`int` appears under both defense__flat and misc__performance.
+
+        Both column names are real - verified against
+        data/interim/fbref_player_seasons.parquet - and the catalogue lists
+        the defence page first, because that table is the authoritative one
+        for defensive actions.
+        """
         resolved, _ = resolve_features(
-                ["defense__blocks__int", "misc__performance__int"]
+                ["misc__performance__int", "defense__flat__int"]
         )
-        assert resolved["interceptions"] == "defense__blocks__int"
+        assert resolved["interceptions"] == "defense__flat__int"
