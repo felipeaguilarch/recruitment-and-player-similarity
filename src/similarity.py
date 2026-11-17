@@ -54,140 +54,351 @@ def choose_n_components(scaled: np.ndarray, target: float) -> int:
         Picking a round number like "5 components" is arbitrary; picking by
         variance is defensible and lets each position group differ.
 
-        TODO 1. Cap the probe at min(n_features, n_samples,
-                config.PCA_MAX_COMPONENTS).
-        TODO 2. Fit a PCA at that ceiling, np.cumsum its
-                explained_variance_ratio_, and np.searchsorted for `target`.
-                Remember searchsorted returns an insertion point, so +1.
-        TODO 3. np.clip into [config.PCA_MIN_COMPONENTS, ceiling] and return int.
+        Fits a probe PCA at the ceiling - the smallest of the sample count, the
+        feature count and config.PCA_MAX_COMPONENTS - and returns the first
+        count whose cumulative explained variance reaches `target`, clipped to
+        [config.PCA_MIN_COMPONENTS, ceiling].
 
-        Note: on data with no real structure this will hit the ceiling without
-        reaching the target. That is correct behaviour, not a bug - you will see
-        it in the synthetic tests.
+        On data with no real structure the target is never reached and the
+        ceiling is returned. That is correct behaviour, not a bug - the
+        synthetic tests show it.
         """
-        raise NotImplementedError("similarity.choose_n_components")
+        ceiling = min(scaled.shape[0], scaled.shape[1], config.PCA_MAX_COMPONENTS)
+        probe = PCA(n_components=ceiling).fit(scaled)
+        variance = np.cumsum(probe.explained_variance_ratio_)
+        n_components = np.searchsorted(variance, target) + 1
+        return int(np.clip(n_components, config.PCA_MIN_COMPONENTS, ceiling))
 
 
 def fit_group(frame: pd.DataFrame, feature_names: list[str]) -> dict:
         """Fit imputer -> scaler -> PCA -> kNN for one position group.
 
-        Return a dict; downstream code and the app read these keys:
-          prep, pca, nn, feature_names, scores, ids, players,
-          explained_variance, explained_variance_ratio
+        Features that are entirely NaN are dropped first, with a warning.
+        Remaining gaps are filled with the group median before scaling, so a
+        player missing one stat stays in the model. The PCA keeps
+        choose_n_components components, and the neighbour index asks for
+        N_NEIGHBOURS + 1 because every point is its own nearest neighbour.
 
-        `ids` and `players` must be positionally aligned with `scores` - row i of
-        scores is ids[i]. Everything downstream depends on that invariant.
+        `ids` and `players` are taken with .to_numpy(), so they are
+        positionally aligned with `scores`: row i of scores is ids[i].
+        Everything downstream depends on that invariant.
 
-        TODO 1. Pipeline([("impute", SimpleImputer(strategy="median")),
-                ("scale", StandardScaler())]) and fit_transform the feature
-                matrix. Impute BEFORE scaling: PCA cannot accept NaN, and a
-                player missing one stat should not be dropped from the model.
-        TODO 2. choose_n_components, then PCA(n_components=k).fit(scaled) and
-                .transform to get scores.
-        TODO 3. NearestNeighbors(n_neighbors=min(config.N_NEIGHBOURS + 1,
-                len(frame)), metric=config.SIMILARITY_METRIC).fit(scores).
-                The +1 is because every point is its own nearest neighbour.
-        TODO 4. Store ids/players via frame[...].to_numpy() so they stay
-                positional. Do NOT keep the pandas index here - the frame was
-                reset and the index means nothing.
+        Returns a dict with keys prep, pca, nn, feature_names, scores, ids,
+        players, explained_variance and explained_variance_ratio.
+        `feature_names` is the list after dropping empty features, so it
+        matches the PCA's input columns.
         """
-        raise NotImplementedError("similarity.fit_group")
+        # SimpleImputer silently DROPS columns that are entirely NaN, which would
+        # leave feature_names longer than the matrix and mislabel every loading.
+        empty = [f for f in feature_names if frame[f].isna().all()]
+        if empty:
+                logger.warning("Dropping all-NaN features: %s", empty)
+                feature_names = [f for f in feature_names if f not in empty]
 
+        prep = Pipeline([
+                ("impute", SimpleImputer(strategy="median")),
+                ("scale", StandardScaler())])
+
+        scaled = prep.fit_transform(frame[feature_names])
+
+        n_components = choose_n_components(scaled, config.PCA_VARIANCE_TARGET)
+        pca = PCA(n_components=n_components)
+        pca.fit(scaled)
+        scores = pca.transform(scaled)
+
+        nn = NearestNeighbors(
+                n_neighbors=min(config.N_NEIGHBOURS + 1, len(frame)),
+                metric=config.SIMILARITY_METRIC).fit(scores)
+
+        return {
+                "prep": prep,
+                "pca": pca,
+                "nn": nn,
+                "feature_names": feature_names,
+                "scores": scores,
+                "ids": frame["player_season_id"].to_numpy(),
+                "players": frame["player"].to_numpy(),
+                "explained_variance": pca.explained_variance_,
+                "explained_variance_ratio": pca.explained_variance_ratio_
+        }
+
+        
 
 def neighbours_frame(models: dict[str, dict]) -> pd.DataFrame:
         """Top-N comparables per player-season, self excluded.
 
-        Columns: position_group, player_season_id, rank, comp_player_season_id,
-        similarity, same_player.
+        Runs one kneighbors query per group over every row at once, skips each
+        row's own index, and numbers the survivors from 1. Positional indices
+        are mapped back through model["ids"] before storing - the step where
+        index bugs hide. `similarity` is 1 - distance, because sklearn's
+        "cosine" metric returns cosine DISTANCE.
 
-        `same_player` is flagged rather than removed: "same player, adjacent
-        season" ranking highly is exactly the self-consistency check in
-        validate(), and the app hides those rows from the comps list.
+        `same_player` is flagged rather than removed: the same player in an
+        adjacent season ranking highly is exactly the self-consistency check in
+        validate(), and the app hides those rows from the comps list. It
+        compares player names, so two different players who share a name within
+        one group are also flagged.
 
-        TODO 1. model["nn"].kneighbors(model["scores"]) returns (distances,
-                indices) for every row at once - do not loop one query at a time.
-        TODO 2. Row i's own index WILL appear in its neighbour list (distance 0).
-                Skip it explicitly by comparing the neighbour index to the row
-                index, then number the survivors from 1.
-        TODO 3. similarity = 1 - distance, because sklearn's "cosine" metric
-                returns cosine DISTANCE.
-        TODO 4. Map positional indices back through model["ids"] before storing.
-                This is the step where bugs hide.
+        Returns position_group, player_season_id, rank, comp_player_season_id,
+        similarity and same_player.
         """
-        raise NotImplementedError("similarity.neighbours_frame")
+
+        rows = []
+
+        for group, model in models.items():
+                distances, indices = model["nn"].kneighbors(model["scores"])
+
+                for i in range(len(model["ids"])):
+                        rank = 0
+
+                        for distance, neighbor_index in zip(distances[i], indices[i]):
+                                neighbour_i = int(neighbor_index)
+
+                                if neighbour_i == i:
+                                        continue  
+
+                                rank += 1
+                                rows.append({
+                                        "position_group": group,
+                                        "player_season_id": model["ids"][i],
+                                        "rank": rank,
+                                        "comp_player_season_id": model["ids"][neighbour_i],
+                                        "similarity": 1 - float(distance),
+                                        "same_player": (model["players"][i] == model["players"][neighbour_i])
+                                })
+
+        return pd.DataFrame(rows, columns=[
+                "position_group",
+                "player_season_id",
+                "rank",
+                "comp_player_season_id",
+                "similarity",
+                "same_player"
+        ])
 
 
 def loadings_frame(models: dict[str, dict]) -> pd.DataFrame:
         """PCA loadings, long format - the input to naming your style dimensions.
 
-        Read the output and give the first three components per group a football
-        name. If PC1 on wingers reads as "carries and shoots a lot" and PC2 as
-        "crosses rather than cuts inside", you have dimensions a scout recognises,
-        and that narrative is half the value of the project.
+        Read the output and give the first three components per group a
+        football name. If PC1 on wingers reads as "carries and shoots a lot"
+        and PC2 as "crosses rather than cuts inside", you have dimensions a
+        scout recognises, and that narrative is half the value of the project.
 
-        Columns: position_group, component ("PC1"...), explained_variance_ratio,
-        feature, loading. Sort by group, component, loading descending so the
-        extremes of each component sit at the top and bottom of its block.
-
-        TODO: zip pca.components_ with pca.explained_variance_ratio_, then zip
-              each weight vector with model["feature_names"].
+        Returns position_group, component ("PC1"...), explained_variance_ratio,
+        feature and loading. Rows are sorted by group, component number and
+        loading descending, so the extremes of each component sit at the top
+        and bottom of its block. Components sort numerically, so PC10 follows
+        PC9 rather than PC1.
         """
-        raise NotImplementedError("similarity.loadings_frame")
+        rows = []
 
+        for group, model in models.items():
+                for component_index, (weights, variance_ratio) in enumerate(
+                        zip(model["pca"].components_, model["pca"].explained_variance_ratio_),
+                        start=1):
+
+                        for feature_name, loading in zip(model["feature_names"], weights):
+                                rows.append({
+                                        "position_group": group,
+                                        "component": f"PC{component_index}",
+                                        "explained_variance_ratio": variance_ratio,
+                                        "feature": feature_name,
+                                        "loading": loading
+                                })
+
+        columns = [
+                "position_group",
+                "component",
+                "explained_variance_ratio",
+                "feature",
+                "loading",
+        ]
+
+        loadings = pd.DataFrame(rows, columns=columns)
+        loadings["_component_index"] = loadings["component"].str[2:].astype(int)
+
+        return (
+                loadings.sort_values(
+                        ["position_group", "_component_index", "loading"],
+                        ascending=[True, True, False],
+                )
+                .drop(columns="_component_index")
+                .reset_index(drop=True)
+        )
 
 def style_map(models: dict[str, dict]) -> pd.DataFrame:
-        """2-D coordinates per player for the app's scatter.
+        """2-D coordinates per player-season for the app's scatter.
 
-        Columns: player_season_id, position_group, x, y, method.
+        Runs UMAP on each group's PCA scores (n_neighbors capped at the group
+        size minus one, min_dist 0.1, random_state 42). Without umap-learn
+        installed it logs a warning and falls back to the first two PCA
+        components, so the app still works.
 
-        TODO 1. try: from umap import UMAP / except ImportError: fall back to the
-                first two PCA columns and log a warning. The app must still work
-                without umap-learn installed.
-        TODO 2. UMAP(n_neighbors=min(15, len(scores) - 1), min_dist=0.1,
-                n_components=2, random_state=42). n_neighbors larger than the
-                sample raises.
-        TODO 3. Record which method produced the coordinates so the app can
-                label the axes honestly.
+        These coordinates are a picture, not the model: the neighbour search
+        runs in PCA space, because UMAP distorts global distances.
+
+        Returns player_season_id, position_group, x, y and method ("umap" or
+        "pca"), so the app can label its axes honestly.
         """
-        raise NotImplementedError("similarity.style_map")
+        try:
+                from umap import UMAP
 
+        except ImportError:
+                use_map = False
+                logger.warning("umap-learn not installed, falling back to PCA for the style map")
+
+        else:
+                use_map = True
+
+        rows = []
+
+        for group, model in models.items():
+                scores = model["scores"]
+
+                if use_map:
+                        coordinates = UMAP(
+                                n_neighbors=min(15, len(scores) - 1),
+                                min_dist=0.1,
+                                n_components=2,
+                                random_state=42
+                        ).fit_transform(scores)
+                        method = "umap"
+
+                else:
+                        coordinates = scores[:, :2]
+                        method = "pca"
+
+                for i, (x,y) in zip(model["ids"], coordinates):
+                        rows.append({
+                                "player_season_id": i,
+                                "position_group": group,
+                                "x": x,
+                                "y": y,
+                                "method": method
+                        })
+
+        return pd.DataFrame(rows, columns=[
+                "player_season_id",
+                "position_group",
+                "x",
+                "y",
+                "method"
+        ])
 
 def validate(neighbours: pd.DataFrame) -> dict:
-        """Self-consistency: how highly does a player rank his own other seasons?
+        """Self-consistency: how highly do players rank their own other seasons?
 
-        The one similarity metric here that is not a matter of taste. A low median
-        rank is real quantitative evidence that the embedding captured the player
-        rather than the noise. Put the number in the README.
+        The one similarity metric here that is not a matter of taste. A low
+        median rank is real quantitative evidence that the embedding captured
+        the player rather than the noise. Put the number in the README.
 
-        TODO 1. Filter to same_player rows, group by player_season_id, take the
-                MIN rank per player (his best self-match).
-        TODO 2. Report the median of those, and the share that land in the top 5.
-        TODO 3. json.dumps to paths.VALIDATION.
+        For each player-season with at least one same-player neighbour, takes
+        the best (lowest) rank among them, then reports the median and the
+        share landing in the top 5. Writes the result to paths.VALIDATION as
+        JSON and returns it.
+
+        Known bias: a player-season whose other season fell outside the top N
+        has no same_player row, so it is left out rather than counted as a
+        miss. The numbers therefore flatter the model somewhat.
 
         Interpreting it: single-digit median is good. If it is in the dozens,
         either your features describe the team more than the player, or seasons
         are being standardised so differently that the same player drifts.
-        """
-        raise NotImplementedError("similarity.validate")
 
+        Raises ValueError if there are no same-player neighbours at all.
+        """
+        neighbors_filtered = neighbours.loc[neighbours["same_player"]]
+        grouped = neighbors_filtered.groupby("player_season_id")["rank"].min()
+
+        if grouped.empty:
+                raise ValueError("No same players found.")
+
+        validation_results = {
+                "median_rank": float(grouped.median()),
+                "top_5_share": float((grouped <= 5).mean())
+        }
+
+        paths.ensure_dirs()
+        paths.VALIDATION.write_text(json.dumps(validation_results, indent=2))
+
+        return validation_results
 
 def run(force: bool = False) -> dict[str, dict]:
         """Stage entry point, called by run_pipeline.py.
 
-        TODO 1. Early-return joblib.load(paths.SIMILARITY_MODELS) unless `force`.
-        TODO 2. Read paths.FEATURES, then get specs from
-                features_mod.available_group_specs(list(frame.columns)).
-                NOT resolve_features - see the note in its docstring.
-        TODO 3. Per group: reset_index(drop=True) the slice (fit_group relies on
-                positional alignment), skip groups too small to fit, warn on
-                groups below config.MIN_GROUP_SIZE, then fit_group.
-        TODO 4. joblib.dump the models, write neighbours_frame to
-                paths.SIMILARITY, loadings_frame to paths.PCA_LOADINGS, a small
-                per-group summary to paths.PCA_VARIANCE, style_map to
-                paths.STYLE_MAP, and call validate.
-        """
-        raise NotImplementedError("similarity.run")
+        Returns the cached models unless `force`. Otherwise reads
+        paths.FEATURES and takes each group's features from
+        features_mod.available_group_specs - NOT resolve_features, whose
+        patterns describe raw FBref names. Groups below config.MIN_GROUP_SIZE
+        are fitted with a warning; groups with fewer rows or features than
+        config.PCA_MIN_COMPONENTS are skipped.
 
+        Writes the models (paths.SIMILARITY_MODELS), neighbours
+        (paths.SIMILARITY), loadings (paths.PCA_LOADINGS), per-group explained
+        variance and component count (paths.PCA_VARIANCE) and the style map
+        (paths.STYLE_MAP), then runs validate().
+
+        Raises SystemExit if the features stage has not run, and ValueError if
+        no group could be fitted.
+        """
+        paths.ensure_dirs()
+
+        if paths.SIMILARITY_MODELS.exists() and not force:
+                logger.info("Loading existing similarity models from %s", paths.SIMILARITY_MODELS)
+                return joblib.load(paths.SIMILARITY_MODELS)
+
+        try:
+                frame = pd.read_parquet(paths.FEATURES)
+        except FileNotFoundError as exc:
+                raise SystemExit(f"Missing features file {paths.FEATURES}. Run stage 3 first.") from exc
+
+        specs = features_mod.available_group_specs(list(frame.columns))
+        models = {}
+
+        for group, feature_names in specs.items():
+                group_frame = frame.loc[frame["position_group"] == group].reset_index(drop=True)
+
+                if len(group_frame) < config.MIN_GROUP_SIZE:
+                        logger.warning("Group %s is below min size %d: only %d rows", group, config.MIN_GROUP_SIZE, len(group_frame))
+
+                if (
+                       len(group_frame) < config.PCA_MIN_COMPONENTS
+                       or len(feature_names) < config.PCA_MIN_COMPONENTS 
+                ):
+                        logger.warning("Skipping group %s: not enough rows or features to fit PCA.",group)
+                        continue
+
+                models[group] = fit_group(group_frame, feature_names)
+
+        if not models:
+                raise ValueError("No position groups were large enough to fit a model.")
+
+        neighbours = neighbours_frame(models)
+        loadings = loadings_frame(models)
+        style = style_map(models)
+        variance = pd.DataFrame(
+                [
+                        {
+                                "position_group": group,
+                                "explained_variance": float(
+                                        model["explained_variance_ratio"].sum()
+                                ),
+                                "n_components": int(model["pca"].n_components_),
+                        }
+                        for group, model in models.items()
+                ],
+                columns=["position_group", "explained_variance", "n_components"],
+        )
+
+        joblib.dump(models, paths.SIMILARITY_MODELS)
+        neighbours.to_parquet(paths.SIMILARITY, index=False)
+        loadings.to_csv(paths.PCA_LOADINGS, index=False)
+        variance.to_csv(paths.PCA_VARIANCE, index=False)
+        style.to_parquet(paths.STYLE_MAP, index=False)
+        validate(neighbours)
+
+        return models
 
 def top_comps(
         player_season_id: str,

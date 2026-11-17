@@ -1,4 +1,4 @@
-"""Stage 3 - raw FBref columns into model-ready features.  [YOU IMPLEMENT THIS]
+"""Stage 3 - raw FBref columns into model-ready features.
 
 Three things happen here, and the middle one is what separates this from a
 naive build:
@@ -55,28 +55,22 @@ INCLUSION_MIN_MINUTES = config.MIN_MINUTES_SENSITIVITY
 def resolve_features(columns: list[str]) -> tuple[dict[str, str], pd.DataFrame]:
         """Map each catalogue feature to a real FBref column name.
 
-        Returns `(resolved, report)` where `resolved` is {feature_name: column}
-        and `report` is a frame with one row per catalogue feature. A feature
-        that resolves to nothing must be dropped from every position group that
-        asked for it, and the report must say so - that is your signal to go fix
-        its patterns in config.py against reports/fbref_columns.txt.
+        Each config.Feature carries `.patterns`, a tuple of regexes tried in
+        order against the flattened column names; the first pattern that
+        matches anything wins. This is how `interceptions` prefers
+        defense__flat__int over the duplicate misc__performance__int. When one
+        pattern matches several columns the alphabetically first is taken, so
+        runs are reproducible.
 
-        Each config.Feature has `.patterns`, a tuple of regexes tried IN ORDER
-        against the flattened column names. First pattern with a hit wins; this
-        is how `interceptions` prefers defense__blocks__int over the duplicate
-        misc__performance__int.
+        Writes the report to paths.FEATURE_RESOLUTION and logs a warning
+        listing every feature that resolved to nothing. A MISSING row is the
+        signal to fix that feature's patterns in config.py against
+        reports/fbref_columns.txt.
 
-        TODO 1. Loop config.FEATURES.items(). For each, loop feature.patterns and
-                collect [c for c in columns if re.match(pattern, c)]. Break on
-                the first pattern that matches anything.
-        TODO 2. If several columns match one pattern, pick deterministically
-                (sorted(...)[0]) so runs are reproducible.
-        TODO 3. Build the report frame with at least: feature, status
-                ("ok"/"MISSING"), column, matched_pattern, patterns_tried,
-                per90, possession_adjusted.
-        TODO 4. Write it to paths.FEATURE_RESOLUTION (mkdir the parent first) and
-                logger.warning the list of misses.
-        TODO 5. Return (resolved, report) - tests unpack both.
+        Returns (resolved, report). `resolved` is {feature_name: column} for
+        every feature that matched. `report` has one row per catalogue feature:
+        feature, status ("ok" or "MISSING"), column, matched_pattern,
+        patterns_tried, per90 and possession_adjusted.
         """
         resolved: dict[str, str] = {}
         rows: list[dict[str,object]] = []
@@ -133,14 +127,12 @@ def resolve_features(columns: list[str]) -> tuple[dict[str, str], pd.DataFrame]:
 def effective_group_specs(resolved: dict[str, str]) -> dict[str, list[str]]:
         """Each group's feature list, minus anything that failed to resolve.
 
-        Use this on the RAW FBref frame, where `resolved` came from
-        resolve_features.
+        Use this on the RAW FBref frame, with `resolved` from resolve_features.
+        Logs a warning naming what each group lost, and an error when a group
+        falls below six usable features - at that point its profile is too thin
+        to trust.
 
-        TODO 1. For each config.GROUP_SPECS item, keep only features present in
-                `resolved`.
-        TODO 2. logger.warning what each group lost, and logger.error if a group
-                drops below ~6 usable features - at that point its profile is
-                not worth trusting.
+        Returns {group: [feature_name, ...]} in config.GROUP_SPECS order.
         """
 
         effective: dict[str, list[str]] = {}
@@ -170,17 +162,17 @@ def available_group_specs(columns: list[str]) -> dict[str, list[str]]:
         """Each group's feature list, restricted to columns present in a frame.
 
         Use this on features.parquet, whose columns are already the catalogue's
-        canonical names (`npxg`, `prog_carries`, ...).
+        canonical names (`npxg`, `prog_carries`, ...). It is a plain membership
+        test, no regex.
 
         This is NOT the same function as effective_group_specs, and the
         difference has already caused one bug: resolve_features' patterns
         describe *raw FBref* column names, so running them against
         features.parquet matches nothing and silently yields zero features per
-        group. Downstream that surfaces as a baffling
-        "SimpleImputer: found array with 0 feature(s)".
+        group. Downstream that surfaces as a baffling "SimpleImputer: found
+        array with 0 feature(s)".
 
-        TODO: filter each config.GROUP_SPECS[group].features by membership in
-              set(columns). No regex involved.
+        Returns {group: [feature_name, ...]}; a group can come back empty.
         """
         available: dict[str, list[str]] = {}
 
@@ -192,20 +184,17 @@ def available_group_specs(columns: list[str]) -> dict[str, list[str]]:
 
 
 def possession_factor(team_possession: pd.Series) -> pd.Series:
-        """Scale defensive actions to a neutral 50% possession baseline.
+        """Multiplier that scales defensive actions to a neutral 50% possession.
 
-        A team with 65% possession gives its players only 35% of the game
-        defending, so their defensive per-90s should be scaled UP by 50/35 = 1.43.
-        A team with 35% possession gets scaled DOWN. Getting this backwards is
-        easy and the tests check the direction.
+        A team with 65% possession leaves its players only 35% of the game to
+        defend, so their defensive per-90s are scaled UP by 50/35 = 1.43; a
+        team with 35% possession is scaled DOWN. The tests check the direction.
 
-        TODO 1. defensive_share = 100 - team_possession.
-        TODO 2. factor = 50 / defensive_share, guarding against divide-by-zero
-                (mask shares below ~5 with .where before dividing).
-        TODO 3. Unknown possession must fall back to 1.0 (no adjustment), not
-                NaN - otherwise you silently drop every player whose team row
-                failed to join.
-        TODO 4. .clip(lower=0.5, upper=2.0) so one freak row cannot dominate.
+        A defensive share of 5% or less is treated as unknown rather than
+        divided by, and unknown possession falls back to 1.0 (no adjustment),
+        so a player whose team row failed to join is kept instead of turning
+        into NaN. The result is clipped to [0.5, 2.0] so one freak row cannot
+        dominate.
         """
         defensive_share = 100 - team_possession
         factor = 50 / defensive_share.where(defensive_share > 5, np.nan)
@@ -216,15 +205,17 @@ def possession_factor(team_possession: pd.Series) -> pd.Series:
 def build(df: pd.DataFrame, resolved: dict[str, str]) -> pd.DataFrame:
         """Compute per-90, possession-adjusted values for every resolved feature.
 
-        TODO 1. Start the output from df[ID_COLUMNS] (intersected with what is
-                actually present - not every source has `foot` or `height_in_cm`).
-        TODO 2. For each resolved feature: pd.to_numeric(..., errors="coerce"),
-                then divide by df["nineties"] if feature.per90, then multiply by
-                possession_factor(...) if feature.padj.
-        TODO 3. Guard the division: nineties of 0 produces inf, so mask it with
-                .where(df["nineties"] > 0) first and .replace([inf, -inf], nan)
-                after. An inf will survive all the way into StandardScaler and
-                poison an entire position group.
+        The output starts from whichever ID_COLUMNS are present in `df`. Each
+        resolved column is then coerced to numeric, divided by `nineties` if
+        the feature is per-90, and multiplied by possession_factor if it is
+        possession-adjusted.
+
+        Rows with zero nineties become NaN rather than inf, and any remaining
+        inf is replaced with NaN: a single inf survives all the way into
+        StandardScaler and poisons a whole position group.
+
+        Returns one row per input row: the ID columns plus one column per
+        feature, named by catalogue feature name rather than FBref column.
         """
         # Intersect rather than index directly: ID_COLUMNS lists everything the
         # output *may* carry, but `foot`, `height_in_cm` and
@@ -251,20 +242,18 @@ def build(df: pd.DataFrame, resolved: dict[str, str]) -> pd.DataFrame:
 def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.DataFrame:
         """Percentile rank of each feature within its position group and season.
 
-        Rank within season as well as group, so that a league-wide shift in, say,
-        pressing volume does not make every 2023-24 player look passive next to
-        2025-26.
+        Ranking within season as well as group means a league-wide shift in,
+        say, pressing volume does not make every 2023-24 player look passive
+        next to 2025-26. Ties take the highest rank (method="max"), so the best
+        player in a group-season always scores 100.
 
-        Output needs `player_season_id`, `position_group`, and one column per
-        feature holding 0-100.
+        Each group's ranks are re-attached to player_season_id positionally,
+        after resetting both indexes. Misaligning that step would silently
+        attribute one player's radar to another.
 
-        TODO 1. Loop the groups; slice features to that group.
-        TODO 2. chunk.groupby("season", observed=True)[names].rank(pct=True) * 100.
-        TODO 3. Re-attach player_season_id and position_group - groupby.rank
-                returns only the ranked columns, aligned by index, so use
-                .to_numpy() or reset_index carefully. Misaligning here silently
-                attributes one player's radar to another.
-        TODO 4. pd.concat the per-group frames.
+        Returns player_season_id, position_group and one 0-100 column per
+        feature. A feature a group does not use is NaN for that group's rows;
+        groups with no usable features or no rows are skipped.
         """
         frames: list[pd.DataFrame] = []
 
@@ -307,18 +296,16 @@ def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.D
 def run(force: bool = False) -> pd.DataFrame:
         """Stage entry point, called by run_pipeline.py.
 
-        TODO 1. paths.ensure_dirs(); early-return the existing parquet unless
-                `force`, so a re-run after a crash resumes.
-        TODO 2. Read paths.PLAYER_SEASONS (SystemExit with a useful message if
-                the merge stage has not run).
-        TODO 3. Filter to minutes >= INCLUSION_MIN_MINUTES and log how many rows
-                survived.
-        TODO 4. resolve_features -> effective_group_specs -> build -> write
-                paths.FEATURES.
-        TODO 5. add_percentiles -> write paths.PERCENTILES.
-        TODO 6. Log per-group player counts and flag any below
-                config.MIN_GROUP_SIZE. Thin groups produce meaningless
-                neighbours and you want to know now, not from the app.
+        Returns the cached features parquet unless `force`, so a re-run after a
+        crash resumes. Otherwise reads paths.PLAYER_SEASONS, drops
+        player-seasons under INCLUSION_MIN_MINUTES, resolves and builds the
+        features, and writes paths.FEATURES and paths.PERCENTILES.
+
+        Finally logs each group's player count and warns on any group below
+        config.MIN_GROUP_SIZE. Thin groups produce meaningless neighbours, and
+        it is better to find out here than in the app.
+
+        Raises SystemExit if the merge stage has not produced its output yet.
         """
 
         paths.ensure_dirs()
