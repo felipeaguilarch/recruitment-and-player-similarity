@@ -13,7 +13,16 @@ total_carry_distance,ok,possession__carries__totdist,^possession__carries__totdi
 carries,ok,possession__carries__carries,^possession__carries__carries$,^possession__carries__carries$,True,False
 carries_into_final_third,ok,possession__carries__1_3,^possession__carries__1_3$,^possession__carries__1_3$,True,False
 carries_into_box,ok,possession__carries__cpa,^possession__carries__cpa$,^possession__carries__cpa$,True,False
-passes_received,ok,possession__flat__rec,^possession__flat__rec$,^possession__flat__rec$,True,False
+passes_received,ok,possession__receiving__rec,^possession__receiving__rec$,^possession__receiving__rec$ | ^possession__flat__rec$,True,False
+prog_carries,ok,possession__carries__prgc,^possession__carries__prgc$,^possession__carries__prgc$ | ^standard__progression__prgc$,True,False
+prog_passes,ok,passing__flat__prgp,^passing__.*__prgp$,^passing__.*__prgp$ | ^standard__progression__prgp$,True,False
+prog_passes_received,ok,possession__receiving__prgr,^possession__receiving__prgr$,^possession__receiving__prgr$ | ^standard__progression__prgr$,True,False
+npxg,ok,shooting__expected__npxg,^shooting__expected__npxg$,^shooting__expected__npxg$ | ^standard__expected__npxg$,True,False
+npxg_per_shot,ok,shooting__expected__npxg_sh,^shooting__expected__npxg_sh$,^shooting__expected__npxg_sh$,False,False
+goals_minus_xg,ok,shooting__expected__np_g_xg,^shooting__expected__np_g_xg$,^shooting__expected__np_g_xg$ | ^shooting__expected__g_xg$,True,False
+shot_distance,ok,shooting__standard__dist,^shooting__standard__dist$,^shooting__standard__dist$,False,False
+xa,ok,passing__expected__xa,^passing__.*__xa$,^passing__.*__xa$,True,False
+xag,ok,standard__expected__xag,^standard__expected__xag$,^standard__expected__xag$ | ^passing__.*__xag$,True,False
 passes_attempted,ok,passing__total__att,^passing__total__att$,^passing__total__att$,True,False
 pass_completion_pct,ok,passing__total__cmp_pct,^passing__total__cmp_pct$,^passing__total__cmp_pct$,False,False
 pass_completion_short_pct,ok,passing__short__cmp_pct,^passing__short__cmp_pct$,^passing__short__cmp_pct$,False,False

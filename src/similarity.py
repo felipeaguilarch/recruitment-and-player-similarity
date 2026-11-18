@@ -400,18 +400,29 @@ def run(force: bool = False) -> dict[str, dict]:
 
         return models
 
-def top_comps(
-        player_season_id: str,
-        neighbours: pd.DataFrame,
-        n: int = 5,
-        exclude_same_player: bool = True,
-) -> pd.DataFrame:
+def top_comps( player_season_id: str, neighbours: pd.DataFrame,
+        n: int = 5, exclude_same_player: bool = True,) -> pd.DataFrame:
         """Convenience lookup used by the app and the validation notebook.
 
-        TODO: filter neighbours to this player, optionally drop same_player rows,
-              and return the n smallest by `rank`.
+        Filters `neighbours` (the output of neighbours_frame) to one
+        player-season and, unless `exclude_same_player` is False, drops the
+        same player's other seasons. Returns the n rows with the smallest
+        `rank`.
+
+        `rank` keeps its original numbering, so after dropping a same-player
+        row the ranks can skip (1, 2, 4, ...). An unknown id returns an empty
+        frame rather than raising, and n=0 returns no rows.
+
+        Raises ValueError if n is negative.
         """
-        raise NotImplementedError("similarity.top_comps")
+        if n < 0:
+                raise ValueError("n must be non-negative")
+        filtered = neighbours.loc[neighbours["player_season_id"] == player_season_id]
+
+        if exclude_same_player:
+                filtered = filtered.loc[~filtered["same_player"]]
+
+        return filtered.nsmallest(n, "rank")
 
 
 if __name__ == "__main__":

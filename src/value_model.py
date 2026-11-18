@@ -66,7 +66,27 @@ def build_design_matrix(frame: pd.DataFrame) -> tuple[pd.DataFrame, list[str], l
         TODO 3. Cast categoricals with .astype("category") - HistGradientBoosting
                 needs that to use them natively.
         """
-        raise NotImplementedError("value_model.build_design_matrix")
+        numeric_candidates = (config.VALUE_NUMERIC_FEATURES + config.VALUE_STAT_FEATURES)
+        categorical_candidates = config.VALUE_CATEGORICAL_FEATURES
+        configured = numeric_candidates + categorical_candidates
+
+        missing = [name for name in configured if name not in frame.columns]
+        if missing:
+                logger.warning(
+                        "Value-model features missing from input and will be skipped: %s",
+                        missing)
+
+        numeric = [name for name in numeric_candidates if name in frame.columns]
+        categorical = [name for name in categorical_candidates if name in frame.columns]
+
+        if not numeric and not categorical:
+                raise ValueError("No configured value-model features are present in the input.")
+
+        design = frame[numeric + categorical].copy()
+        for name in categorical:
+                design[name] = design[name].astype("category")
+
+        return design, numeric, categorical
 
 
 def make_ridge(numeric: list[str], categorical: list[str]) -> Pipeline:
@@ -84,7 +104,44 @@ def make_ridge(numeric: list[str], categorical: list[str]) -> Pipeline:
                 raise.
         TODO 4. ColumnTransformer them together, remainder="drop", then Ridge.
         """
-        raise NotImplementedError("value_model.make_ridge")
+        transformers = []
+
+        if "age" in numeric:
+                age_pipeline = Pipeline(
+                        [
+                                ("impute", SimpleImputer(strategy="median")),
+                                (
+                                        "spline",
+                                        SplineTransformer(n_knots=5,degree=3,include_bias=False),
+                                ),
+                        ]
+                )
+                transformers.append(("age", age_pipeline, ["age"]))
+
+        other_numeric = [name for name in numeric if name != "age"]
+        if other_numeric:
+                numeric_pipeline = Pipeline(
+                        [
+                                ("impute", SimpleImputer(strategy="median")),
+                                ("scale", StandardScaler()),
+                        ]
+                )
+                transformers.append(("numerics", numeric_pipeline, other_numeric))
+
+        if categorical:
+                transformers.append(
+                        (
+                                "categoricals",
+                                OneHotEncoder(handle_unknown="ignore",min_frequency=10),
+                                categorical,
+                        )
+                )
+
+        if not transformers:
+                raise ValueError("Ridge requires at least one numeric or categorical feature.")
+
+        transformer = ColumnTransformer(transformers=transformers, remainder="drop")
+        return Pipeline([("transformer", transformer), ("regressor", Ridge())])
 
 
 def make_gbm(numeric: list[str], categorical: list[str]) -> Pipeline:
@@ -100,7 +157,23 @@ def make_gbm(numeric: list[str], categorical: list[str]) -> Pipeline:
                 are silently treated as continuous numbers.
         TODO 3. Set random_state so your README numbers are reproducible.
         """
-        raise NotImplementedError("value_model.make_gbm")
+        if not numeric and not categorical:
+                raise ValueError("GBM requires at least one numeric or categorical feature.")
+
+        transformers = []
+        if numeric:
+                transformers.append(("numeric", "passthrough", numeric))
+        if categorical:
+                transformers.append(("categorical", "passthrough", categorical))
+
+        transformer = ColumnTransformer(transformers=transformers,
+                remainder="drop",verbose_feature_names_out=False,
+        ).set_output(transform="pandas")
+
+        categorical_features = list(range(len(numeric), len(numeric) + len(categorical)))
+        regressor = HistGradientBoostingRegressor(categorical_features=categorical_features,
+                random_state=42)
+        return Pipeline([("transformer", transformer), ("regressor", regressor)])
 
 
 def euro_error(actual: np.ndarray, predicted_log: np.ndarray, log_target: bool) -> dict:
@@ -117,14 +190,9 @@ def euro_error(actual: np.ndarray, predicted_log: np.ndarray, log_target: bool) 
         raise NotImplementedError("value_model.euro_error")
 
 
-def evaluate(
-        design: pd.DataFrame,
-        target: np.ndarray,
-        groups: np.ndarray,
-        actual_eur: np.ndarray,
-        numeric: list[str],
-        categorical: list[str],
-) -> dict:
+def evaluate(design: pd.DataFrame,target: np.ndarray,
+        groups: np.ndarray,actual_eur: np.ndarray,
+        numeric: list[str],categorical: list[str],) -> dict:
         """Grouped cross-validation for both candidate models.
 
         TODO 1. GroupKFold(n_splits=min(config.CV_FOLDS, n_unique_groups)).

@@ -1,0 +1,8 @@
+name,relpath,md5,observed_on
+squads_2021_obs_2023-05,2021/players.json.gz,4df91b78ad466c42e0fa6eb8292ddb39,2023-05-16
+squads_2022_obs_2023-07,2022/players.json.gz,04010455e87edc2a66854f8b7fd79975,2023-07-11
+squads_2023_obs_2024-08,2023/players.json.gz,ef091946658f7f20489844cd4411d37a,2024-08-29
+squads_2024_obs_2026-02,2024/players.json.gz,405f5f887841c8932ed172504db8e826,2026-02-14
+squads_2025_obs_2026-02,2025/players.json.gz,d1d3c8911d2bdaafd6edf5bd80bab002,2026-02-14
+squads_2024_obs_2026-03,2024/players.json.gz,781e5e255be1dcf8f5040def7d624574,2026-03-26
+squads_2025_obs_2026-07,2025/players.json.gz,90b0684c902dff4b3e56bad672d52a2d,2026-07-07

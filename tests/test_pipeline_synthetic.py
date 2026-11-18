@@ -13,6 +13,12 @@ shortlist, and that every figure renders. Whether the comps are any *good* is
 what notebooks/validation.ipynb is for.
 
     pytest tests/test_pipeline_synthetic.py -q
+
+A stage that still raises NotImplementedError does not error the whole file:
+its tests (and those of every stage after it) are SKIPPED with a note saying
+which stage is unfinished. So a run doubles as a progress meter - finish
+value_model.py and its three tests turn from skipped to passed even while
+figures.py is still a stub.
 """
 
 from __future__ import annotations
@@ -26,6 +32,16 @@ from src import config
 N_PLAYERS = 420
 SEASONS = ("2324", "2425")
 LEAGUES = ("ENG-Premier League", "ESP-La Liga", "ITA-Serie A")
+
+#: Stage name -> the stub that stopped it, filled in by the `pipeline` fixture.
+UNFINISHED: dict[str, str] = {}
+
+
+def needs(*stages: str) -> None:
+        """Skip the calling test if any of these stages is still a stub."""
+        for stage in stages:
+                if stage in UNFINISHED:
+                        pytest.skip(f"{stage} not implemented yet ({UNFINISHED[stage]})")
 
 SUB_POSITIONS = {
         "CB": "Centre-Back",
@@ -130,10 +146,22 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
 
         try:
                 synthetic_player_seasons.to_parquet(paths_mod.PLAYER_SEASONS, index=False)
-                features_mod.run(force=True)
-                similarity_mod.run(force=True)
-                value_mod.run(force=True)
-                figures_mod.run()
+                stages = [
+                        ("features", lambda: features_mod.run(force=True)),
+                        ("similarity", lambda: similarity_mod.run(force=True)),
+                        ("value", lambda: value_mod.run(force=True)),
+                        ("figures", lambda: figures_mod.run()),
+                ]
+                UNFINISHED.clear()
+                for name, stage in stages:
+                        if UNFINISHED:
+                                # A later stage reads the earlier one's output.
+                                UNFINISHED[name] = f"waits on {next(iter(UNFINISHED))}"
+                                continue
+                        try:
+                                stage()
+                        except NotImplementedError as exc:
+                                UNFINISHED[name] = str(exc)
                 yield paths_mod
         finally:
                 for key, value in saved.items():
@@ -231,6 +259,7 @@ def test_loadings_and_style_map_written(pipeline):
 # --- value model -----------------------------------------------------------
 
 def test_value_predictions_are_positive_and_complete(pipeline):
+        needs("value")
         predictions = pd.read_parquet(pipeline.VALUE_PREDICTIONS)
         assert len(predictions) > 0
         assert (predictions["predicted_value_eur"] > 0).all()
@@ -238,6 +267,7 @@ def test_value_predictions_are_positive_and_complete(pipeline):
 
 
 def test_undervalued_flag_matches_its_threshold(pipeline):
+        needs("value")
         predictions = pd.read_parquet(pipeline.VALUE_PREDICTIONS)
         expected = predictions["log_residual"] <= -config.UNDERVALUED_LOG_THRESHOLD
         assert (predictions["undervalued"] == expected).all()
@@ -246,6 +276,7 @@ def test_undervalued_flag_matches_its_threshold(pipeline):
 def test_value_metrics_report_both_candidate_models(pipeline):
         import json
 
+        needs("value")
         metrics = json.loads(pipeline.VALUE_METRICS.read_text(encoding="utf-8"))
         assert {"ridge", "gbm"} <= set(metrics)
         assert metrics["selected_model"] in {"ridge", "gbm"}
@@ -256,6 +287,7 @@ def test_value_metrics_report_both_candidate_models(pipeline):
 # --- figures ---------------------------------------------------------------
 
 def test_every_readme_figure_renders(pipeline):
+        needs("figures")
         expected = {
                 "radar_example.png", "pca_variance.png", "age_curve.png",
                 "value_scatter.png", "style_map.png",

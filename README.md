@@ -104,8 +104,10 @@ you refit. The app labels the map as a picture, not as the model.
 
 | Source | Via | What it gives |
 | --- | --- | --- |
-| [FBref](https://fbref.com) | [`soccerdata`](https://soccerdata.readthedocs.io/) | Per-90 stats across eight stat pages |
-| [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) | direct CSV download | Market values, `sub_position`, contract expiry |
+| [FBref](https://fbref.com) | [`soccerdata`](https://soccerdata.readthedocs.io/) | Player list, basic stats, team possession |
+| FBref, archived | [Wayback Machine](https://web.archive.org/) copies | The advanced stats FBref no longer serves |
+| [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) | direct CSV download | Market values, `sub_position`, transfers |
+| transfermarkt-datasets, raw scrapes | its public DVC store | Contract end dates as they stood during each season |
 
 No live scraping of Transfermarkt. The project uses dcaribou's already-scraped,
 versioned release, which is both kinder to the site and far more reproducible —
@@ -117,15 +119,63 @@ Two Transfermarkt fields justify the detour on their own:
   own position column gives only `DF` / `MF` / `FW`, which cannot separate a
   centre-back from a full-back — exactly the distinction this tool exists to
   respect.
-- **`contract_expiration_date`** — contract years remaining is one of the
-  strongest real drivers of transfer price, and is absent from most portfolio
-  versions of this project.
+- **Contract end date** — contract years remaining is one of the strongest
+  real drivers of transfer price, and is absent from most portfolio versions
+  of this project.
+
+The released players table only has each player's *current* contract, which
+is wrong for every past season: anyone who has extended or moved since looks
+as if he had years more left. Measured on this project's data, it put the
+average 2023-24 player at 4.4 years remaining against 2.8 from dated records,
+and moved 45% of rows by more than three months.
+[`src/fetch_tm_contracts.py`](src/fetch_tm_contracts.py) fixes that with the
+dataset's raw scrapes, which sit in a public store as dated files: each one is
+a snapshot of every player's contract on the day it was scraped. Seven of
+them, observed between May 2023 and July 2026, are pinned by checksum in
+[`data/tm_contract_snapshots.csv`](data/tm_contract_snapshots.csv). Each
+player-season takes the snapshot nearest its midpoint, provided the player was
+at the same club in between (checked against the transfers table); otherwise
+the value is left blank rather than guessed. About 77% of player-seasons get
+one. Contracts change within a club spell about 15% of the time per year, so
+with typical gaps of 4-6 months roughly 5-7% of matched values are slightly
+stale - Ødegaard's September 2023 extension, for example, is missed for
+2023-24.
 
 `soccerdata` 1.9.0 only exposes five player-season stat types, which leaves out
 `passing`, `defense`, `possession` and `gca` — between them almost everything
 describing *how* a player plays rather than how much he scores.
 [`src/fbref_extra.py`](src/fbref_extra.py) subclasses the reader to widen it,
 reusing its caching and rate limiting.
+
+**FBref lost its advanced stats on 2026-01-20**, when its Opta data agreement
+ended: passing, progression, chance creation, defensive actions and xG are now
+blank on the live site. [`src/fetch_fbref_archive.py`](src/fetch_fbref_archive.py)
+recovers them from Wayback Machine copies of the same pages taken before that
+date. Every copy used is pinned by capture timestamp in
+[`data/fbref_archive_snapshots.csv`](data/fbref_archive_snapshots.csv), so the
+download is reproducible byte for byte. The archive holds all of 2022-23 and
+2024-25 but only parts of 2023-24 and none of 2025-26, and a player-season
+enters the model only if it has every advanced stat page
+(`REQUIRE_ADVANCED_STATS` in `config.py`) - filling whole missing pages with
+medians would invent profiles. Coverage per league and season is in
+`reports/fbref_archive_coverage.csv`.
+
+2022-23 comes from the archive alone. The live fetch drives a real Chrome
+through `soccerdata`, whose driver Windows application control can block, and
+the archive has the whole season anyway: its standard page stands in for the
+live player list and its Big 5 squad page for team possession.
+
+**The name join is checked against where players actually played.** Matching
+FBref to Transfermarkt on name and birth year alone confuses namesakes born a
+year apart - two Adama Traorés, two Vitinhas, Igor Julio and Igor Vekic - and
+`token_set_ratio` scores "Rodri" 100 against "Rodri Tarín". Transfermarkt's
+appearances table records each player's club per season, so every match is
+confirmed only if the Transfermarkt player appeared for that FBref club that
+season; otherwise the right player is looked up within that club's squad.
+This corrected 52 player-seasons (Rodri had been a €1m centre-back) and
+recovered 80 that failed on nickname vs full name (Andy/Andrew Robertson,
+Max/Maximilian Kilman). Every change is listed in
+`reports/name_match_club_check.csv`.
 
 ### Position groups
 
@@ -201,7 +251,7 @@ separate a tool somebody might trust from a notebook that produced a plot.
 | Claim | Value |
 | --- | --- |
 | Player-seasons in the sample | _TODO_ |
-| Leagues × seasons | 5 × 3 |
+| Leagues × seasons | 5 leagues 2022-23 and 2024-25, plus Premier League 2023-24 |
 | Name match rate (FBref → Transfermarkt) | _TODO_% |
 | Median rank of a player's own adjacent season | _TODO_ |
 | Share of players whose own other season ranks top-5 | _TODO_% |
@@ -249,9 +299,24 @@ Stated here rather than waiting for someone else to point them out.
   stop at 2026-06-12 and 2026/27 squads are not covered, so 2025-26 is the newest
   usable season.
   ([status](https://github.com/dcaribou/transfermarkt-datasets/discussions/383))
+- **Advanced stats come from archived pages.** FBref stopped publishing them in
+  January 2026, and the archived copies cover 2022-23 and 2024-25 fully but
+  2023-24 only for the Premier League. 2025-26 has no advanced stats at all, so
+  it is not in the model. Aerial duels and ball recoveries are archived for
+  2022-23 but only two leagues in 2024-25, and are not used.
+- **Seasons are not evenly spaced.** With 2023-24 thin outside England, most
+  players' two seasons are two years apart, which makes them look less alike
+  than adjacent seasons would - read the self-consistency numbers by gap.
+- **Contract lengths for past seasons are reconstructed, not recorded.** About
+  a quarter of player-seasons - mostly players who changed club soon after -
+  have no trustworthy observation and are left blank, and an estimated 5-7%
+  of the rest miss an extension signed between the snapshot and the season.
 - **Goalkeepers are excluded.**
-- **The name join is imperfect.** See the match rate above; unmatched players
-  fall back to FBref's coarse position column and are flagged in the app.
+- **The name join is imperfect.** See the match rate above. The club check
+  catches namesakes and nicknames, but a player Transfermarkt knows by an
+  unrelated name ("Zanka" for Mathias Jørgensen) stays unmatched, falls back
+  to FBref's coarse position column, and is flagged in the app;
+  `data/manual_name_overrides.csv` is the fix.
 
 ---
 
@@ -284,7 +349,9 @@ streamlit run app.py
 | Stage | Cold-start time | What it does |
 | --- | --- | --- |
 | `fetch-fbref` | 60–120 min | Rate-limited to ~1 request / 3s. Cached under `~/soccerdata`. |
+| `fetch-fbref-archive` | 2–5 min | Pinned Wayback Machine copies, ~2s apart. Cached under `data/raw/fbref_archive`. |
 | `fetch-transfermarkt` | 3–10 min | One ~241 MB download |
+| `fetch-tm-contracts` | < 1 min | Seven pinned scrape files (~15 MB). Cached under `data/raw/transfermarkt/contracts`. |
 | `merge` | 1–3 min | The fuzzy name join dominates |
 | `features` | < 1 min | Per-90, possession-adjust, percentile-rank |
 | `similarity` | 1–2 min | PCA + cosine kNN per group; UMAP is the slow part |
@@ -332,7 +399,9 @@ key that parses to the wrong year) before you spend an hour on a pipeline run.
 │   ├── paths.py                Single source of truth for file locations
 │   ├── fbref_extra.py          Widened FBref reader (passing/defense/possession)
 │   ├── fetch_fbref.py          Stage 1a
+│   ├── fetch_fbref_archive.py  Stage 1a: advanced stats from the Wayback Machine
 │   ├── fetch_transfermarkt.py  Stage 1b
+│   ├── fetch_tm_contracts.py   Stage 1c: contract length as it stood each season
 │   ├── name_matching.py        Normalise -> block -> fuzzy -> manual override
 │   ├── merge.py                Stage 2: one player-season table
 │   ├── features.py             Stage 3: per-90, possession-adjust, percentiles
@@ -344,6 +413,8 @@ key that parses to the wrong year) before you spend an hour on a pipeline run.
 │   ├── raw/                    gitignored - reproducible downloads
 │   ├── interim/                gitignored
 │   ├── processed/              COMMITTED - the deployed app reads these
+│   ├── fbref_archive_snapshots.csv  Pinned Wayback captures
+│   ├── tm_contract_snapshots.csv    Pinned contract snapshots
 │   └── manual_name_overrides.csv
 ├── artifacts/                  COMMITTED - fitted models (joblib)
 ├── reports/                    COMMITTED - evidence the pipeline behaved
@@ -380,7 +451,8 @@ reaching for Git LFS.
 ## Credits
 
 - Stats: [FBref](https://fbref.com) via
-  [`soccerdata`](https://github.com/probberechts/soccerdata) by Pieter Robberechts
+  [`soccerdata`](https://github.com/probberechts/soccerdata) by Pieter Robberechts;
+  advanced stats (Opta) from the [Internet Archive](https://archive.org/)'s copies of FBref
 - Market values:
   [`transfermarkt-datasets`](https://github.com/dcaribou/transfermarkt-datasets)
-  by David Cariboo
+  by David Cariboo, including its raw scrapes for dated contract lengths

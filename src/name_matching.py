@@ -251,10 +251,17 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
                         rows.append(row)
                         continue
 
-                best = process.extractOne(query, choices, scorer=fuzz.token_set_ratio)
-                if best is None:
+                scored = process.extract(query, choices, scorer=fuzz.token_set_ratio, limit=None)
+                if not scored:
                         rows.append(row)
                         continue
+                # token_set_ratio scores a name 100 against any longer name that
+                # contains it ("rodri" vs "rodri tarin"), so several candidates
+                # can tie at the top. extractOne kept whichever came first, which
+                # matched Man City's Rodri to Rodri Tarin, a centre-back born the
+                # same year. Among the tied, prefer the closest full name.
+                top = scored[0][1]
+                best = max((s for s in scored if s[1] == top), key=lambda s: fuzz.ratio(query, s[0]))
 
                 score, position = best[1], best[2]
                 candidate = tm.iloc[position]

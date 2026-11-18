@@ -175,3 +175,158 @@ def test_resolve_features_disambiguates_repeated_stat_names(isolated_reports):
                 ["misc__performance__int", "defense__flat__int"]
         )
         assert resolved["interceptions"] == "defense__flat__int"
+
+
+# --- archived FBref stats --------------------------------------------------
+
+def _live_frame(rows):
+        """A tiny live-style FBref table: (team, player, born, 90s, passes)."""
+        index = pd.MultiIndex.from_tuples(
+                [("ESP-La Liga", "2425", team, player) for team, player, *_ in rows],
+                names=["league", "season", "team", "player"],
+        )
+        return pd.DataFrame(
+                {
+                        "standard__flat__born": [r[2] for r in rows],
+                        "standard__playing_time__90s": [r[3] for r in rows],
+                        "passing__total__cmp": pd.array([r[4] for r in rows], dtype="Int64"),
+                },
+                index=index,
+        )
+
+
+def test_archive_alignment_follows_renamed_clubs_and_players():
+        """FBref renamed 'Betis' to 'Real Betis' and some players since the archive."""
+        from src.fetch_fbref_archive import align_to_live
+
+        live = _live_frame([
+                ("Real Betis", "Isco", 1992, 20.1, None),
+                ("Real Betis", "Johnny Cardoso", 2001, 25.3, None),
+                ("Real Betis", "Abde Ezzalzouli", 2001, 18.0, None),
+                ("Real Betis", "Andy Smith", 1995, 12.4, None),
+        ])
+        archived = _live_frame([
+                ("Betis", "Isco", 1992, 20.1, 900),
+                ("Betis", "Johnny Cardoso", 2001, 25.3, 1100),
+                ("Betis", "Abde Ezzalzouli", 2001, 18.0, 400),
+                ("Betis", "Andrew Smith", 1995, 12.4, 300),
+        ]).rename(columns={
+                "standard__flat__born": "passing__flat__born",
+                "standard__playing_time__90s": "passing__flat__90s",
+        })
+
+        aligned = align_to_live(archived, live, "passing")
+        assert set(aligned.index) == set(live.index)
+        assert aligned.loc[("ESP-La Liga", "2425", "Real Betis", "Andy Smith"), "passing__total__cmp"] == 300
+
+
+def test_archive_overlay_fills_gaps_without_adding_rows():
+        from src.fetch_fbref_archive import overlay
+
+        live = _live_frame([("Arsenal", "A", 2000, 30.0, None), ("Arsenal", "B", 2001, 10.0, 50)])
+        archived = _live_frame([("Arsenal", "A", 2000, 30.0, 1200), ("Arsenal", "Ghost", 1999, 5.0, 99)])
+        archived = archived[["passing__total__cmp"]].assign(passing__flat__prgp=[40, 1])
+
+        combined = overlay(live, archived)
+        assert list(combined.index) == list(live.index)                 # no "Ghost" row
+        assert combined.loc[("ESP-La Liga", "2425", "Arsenal", "A"), "passing__total__cmp"] == 1200
+        assert combined.loc[("ESP-La Liga", "2425", "Arsenal", "B"), "passing__total__cmp"] == 50
+        assert "passing__flat__prgp" in combined.columns                # archive-only stat kept
+
+
+# --- dated contracts ----------------------------------------------------------
+
+def _obs(player_id, joined, contract_end, observed_on, source):
+        return {
+                "player_id": player_id,
+                "joined": pd.Timestamp(joined) if joined else pd.NaT,
+                "contract_end": pd.Timestamp(contract_end),
+                "observed_on": pd.Timestamp(observed_on),
+                "source": source,
+        }
+
+
+def test_contract_at_midpoint_picks_the_nearest_observation_of_the_same_spell():
+        """Midpoint of "2324" is 2024-01-01. Each player tests one rule."""
+        from src.fetch_tm_contracts import contract_at_midpoint
+
+        observations = pd.DataFrame([
+                # 1: nearest wins (Aug 2023 beats Jul 2024)
+                _obs(1, "2020-07-01", "2025-06-30", "2023-08-01", "near"),
+                _obs(1, "2020-07-01", "2027-06-30", "2024-07-01", "far"),
+                # 2: equal distance either side -> the earlier one (no look-ahead)
+                _obs(2, "2020-07-01", "2025-06-30", "2023-12-01", "before"),
+                _obs(2, "2020-07-01", "2026-06-30", "2024-02-01", "after"),
+                # 3: joined after the midpoint -> a later spell, unusable
+                _obs(3, "2024-07-15", "2029-06-30", "2024-08-01", "later_spell"),
+                # 4: contract already over at the midpoint -> unusable
+                _obs(4, "2019-07-01", "2023-06-30", "2023-05-01", "expired"),
+                # 5: undated join, but a transfer between observation and midpoint
+                _obs(5, None, "2030-06-30", "2026-07-06", "players.csv"),
+                _obs(5, "2021-07-01", "2024-06-30", "2023-07-01", "old_club"),
+        ])
+        transfers = pd.DataFrame({"player_id": [5], "transfer_date": [pd.Timestamp("2024-07-01")]})
+        rows = pd.DataFrame({"tm_player_id": [1, 2, 3, 4, 5, np.nan, 99], "season": ["2324"] * 7},
+                            index=[10, 11, 12, 13, 14, 15, 16])
+
+        out = contract_at_midpoint(rows, observations, transfers)
+
+        assert list(out.index) == list(rows.index)
+        assert out.loc[10, "contract_source"] == "near"
+        assert out.loc[11, "contract_source"] == "before"
+        assert pd.isna(out.loc[12, "contract_end"])
+        assert pd.isna(out.loc[13, "contract_end"])
+        assert out.loc[14, "contract_source"] == "old_club"
+        assert out.loc[14, "contract_end"] == pd.Timestamp("2024-06-30")
+        assert pd.isna(out.loc[15, "contract_end"])     # no Transfermarkt id
+        assert pd.isna(out.loc[16, "contract_end"])     # no observation at all
+
+
+def test_tm_dates_parse_in_both_scrape_formats():
+        from src.fetch_tm_contracts import parse_tm_date
+
+        parsed = parse_tm_date(pd.Series(["Jun 30, 2026", "30/06/2026", "Jul 29, 2001 (21)", "-", None]))
+        assert parsed.iloc[0] == parsed.iloc[1] == pd.Timestamp("2026-06-30")
+        assert parsed.iloc[2] == pd.Timestamp("2001-07-29")
+        assert parsed.iloc[3:].isna().all()
+
+
+# --- club check on the name join ----------------------------------------------
+
+def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypatch, tmp_path):
+        from src import merge
+
+        monkeypatch.setattr(merge.paths, "MATCH_CLUB_CHECK", tmp_path / "club_check.csv")
+
+        players = pd.DataFrame({
+                "player_id": [1, 2, 3, 4, 5, 6, 7],
+                "name": ["Igor Vekic", "Igor Julio", "Anna Smith", "Bea Jones", "Cleo Brown", "Dana White", "Eve Black"],
+                "birth_year": [1998, 1998, 1995, 1996, 1997, 1994, 1999],
+                "sub_position": ["Goalkeeper", "Centre-Back", "Left Winger", "Centre-Forward", "Right-Back", "Centre-Back", "Left-Back"],
+        })
+        club_seasons = pd.DataFrame({
+                "player_id": [2, 3, 4, 5, 6, 1],
+                "season_end": [2024] * 6,
+                "player_club_id": [10, 10, 10, 10, 10, 99],
+                "minutes_played": [900] * 6,
+        })
+        monkeypatch.setattr(merge, "load_club_seasons", lambda: club_seasons)
+        df = pd.DataFrame({
+                "league": ["ENG-Premier League"] * 5, "season": ["2324"] * 5, "team": ["Brighton"] * 5,
+                "player": ["Igor", "Anna Smith", "Bea Jones", "Cleo Brown", "Dana White"],
+                "born": [1998, 1995, 1996, 1997, 1994],
+                "tm_player_id": [1.0, 3.0, 4.0, 5.0, 7.0],
+                "tm_name": ["Igor Vekic", "Anna Smith", "Bea Jones", "Cleo Brown", "Eve Black"],
+                "tm_sub_position": ["Goalkeeper", "Left Winger", "Centre-Forward", "Right-Back", "Left-Back"],
+                "match_decision": ["accepted", "accepted", "accepted", "accepted", "override"],
+        })
+
+        out = merge.confirm_by_club(df, players)
+
+        assert out.loc[0, "tm_name"] == "Igor Julio"              # namesake swapped
+        assert out.loc[0, "tm_sub_position"] == "Centre-Back"
+        assert out.loc[0, "club_check"] == "corrected"
+        assert (out.loc[1:3, "club_check"] == "confirmed").all()
+        assert out.loc[4, "club_check"] == "override"             # never second-guessed
+        assert out.loc[4, "tm_name"] == "Eve Black"
+        assert "match_decision" not in out.columns

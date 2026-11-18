@@ -1,0 +1,38 @@
+season,stat_type,scope,timestamp,url,rows
+2223,team_possession,big5,20231011201923,https://fbref.com/en/comps/Big5/2022-2023/possession/squads/2022-2023-Big-5-European-Leagues-Stats,98
+2223,standard,big5,20231011173649,https://fbref.com/en/comps/Big5/2022-2023/stats/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,shooting,big5,20231012140852,https://fbref.com/en/comps/Big5/2022-2023/shooting/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,passing,big5,20231011081933,https://fbref.com/en/comps/Big5/2022-2023/passing/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,passing_types,big5,20231011072904,https://fbref.com/en/comps/Big5/2022-2023/passing_types/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,gca,big5,20231011085549,https://fbref.com/en/comps/Big5/2022-2023/gca/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,defense,big5,20231011214957,https://fbref.com/en/comps/Big5/2022-2023/defense/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,possession,big5,20250813155135,https://fbref.com/en/comps/Big5/2022-2023/possession/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2223,misc,big5,20240113231414,https://fbref.com/en/comps/Big5/2022-2023/misc/players/2022-2023-Big-5-European-Leagues-Stats,2889
+2324,standard,ENG-Premier League,20251210155705,https://fbref.com/en/comps/9/2023-2024/stats/2023-2024-Premier-League-Stats,580
+2324,standard,ESP-La Liga,20251128233954,https://fbref.com/en/comps/12/2023-2024/stats/2023-2024-La-Liga-Stats,609
+2324,standard,ITA-Serie A,20251115003244,https://fbref.com/en/comps/11/2023-2024/stats/2023-2024-Serie-A-Stats,616
+2324,standard,GER-Bundesliga,20251115182209,https://fbref.com/en/comps/20/2023-2024/stats/2023-2024-Bundesliga-Stats,507
+2324,standard,FRA-Ligue 1,20251114222302,https://fbref.com/en/comps/13/2023-2024/stats/2023-2024-Ligue-1-Stats,540
+2324,shooting,big5,20241002212159,https://fbref.com/en/comps/Big5/2023-2024/shooting/players/2023-2024-Big-5-European-Leagues-Stats,2852
+2324,passing,big5,20241206075630,https://fbref.com/en/comps/Big5/2023-2024/passing/players/2023-2024-Big-5-European-Leagues-Stats,2852
+2324,passing_types,big5,20241116120135,https://fbref.com/en/comps/Big5/2023-2024/passing_types/players/2023-2024-Big-5-European-Leagues-Stats,2852
+2324,gca,ENG-Premier League,20250714104930,https://fbref.com/en/comps/9/2023-2024/gca/2023-2024-Premier-League-Stats,580
+2324,gca,ESP-La Liga,20251123031418,https://fbref.com/en/comps/12/2023-2024/gca/2023-2024-La-Liga-Stats,609
+2324,gca,ITA-Serie A,20241228054851,https://fbref.com/en/comps/11/2023-2024/gca/2023-2024-Serie-A-Stats,616
+2324,defense,ENG-Premier League,20241008233648,https://fbref.com/en/comps/9/2023-2024/defense/2023-2024-Premier-League-Stats,580
+2324,defense,ESP-La Liga,20251205030636,https://fbref.com/en/comps/12/2023-2024/defense/2023-2024-La-Liga-Stats,609
+2324,possession,ENG-Premier League,20251206095157,https://fbref.com/en/comps/9/2023-2024/possession/2023-2024-Premier-League-Stats,580
+2324,possession,FRA-Ligue 1,20251115215900,https://fbref.com/en/comps/13/2023-2024/possession/2023-2024-Ligue-1-Stats,540
+2324,misc,ENG-Premier League,20250729085604,https://fbref.com/en/comps/9/2023-2024/misc/2023-2024-Premier-League-Stats,580
+2324,misc,ESP-La Liga,20251123110417,https://fbref.com/en/comps/12/2023-2024/misc/2023-2024-La-Liga-Stats,609
+2324,misc,ITA-Serie A,20241228054948,https://fbref.com/en/comps/11/2023-2024/misc/2023-2024-Serie-A-Stats,616
+2324,misc,GER-Bundesliga,20251009221953,https://fbref.com/en/comps/20/2023-2024/misc/2023-2024-Bundesliga-Stats,507
+2425,standard,big5,20251026074147,https://fbref.com/en/comps/Big5/2024-2025/stats/players/2024-2025-Big-5-European-Leagues-Stats,2854
+2425,shooting,big5,20250729040154,https://fbref.com/en/comps/Big5/shooting/players/Big-5-European-Leagues-Stats,2854
+2425,passing,big5,20260109160332,https://fbref.com/en/comps/Big5/2024-2025/passing/players/2024-2025-Big-5-European-Leagues-Stats,2854
+2425,passing_types,big5,20250729040204,https://fbref.com/en/comps/Big5/passing_types/players/Big-5-European-Leagues-Stats,2854
+2425,gca,big5,20250729040211,https://fbref.com/en/comps/Big5/gca/players/Big-5-European-Leagues-Stats,2854
+2425,defense,big5,20250729040215,https://fbref.com/en/comps/Big5/defense/players/Big-5-European-Leagues-Stats,2854
+2425,possession,big5,20250710164720,https://fbref.com/en/comps/Big5/possession/players/Big-5-European-Leagues-Stats,2854
+2425,misc,ENG-Premier League,20251225224131,https://fbref.com/en/comps/9/2024-2025/misc/2024-2025-Premier-League-Stats,574
+2425,misc,GER-Bundesliga,20250729101602,https://fbref.com/en/comps/20/misc/Bundesliga-Stats,492

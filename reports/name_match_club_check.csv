@@ -1,0 +1,142 @@
+league,season,team,player,born,status,via,old_tm_name,new_tm_name,new_tm_player_id
+ENG-Premier League,2223,Aston Villa,Emi Buendía,1996,recovered,surname,,Emiliano Buendía,321247.0
+ENG-Premier League,2223,Bournemouth,Illia Zabarnyi,2002,recovered,surname,,Ilya Zabarnyi,659089.0
+ENG-Premier League,2223,Everton,Thomas Cannon,2002,recovered,surname,,Tom Cannon,669366.0
+ENG-Premier League,2223,Leeds United,Degnand Gnonto,2003,recovered,surname,,Wilfried Gnonto,627626.0
+ENG-Premier League,2223,Liverpool,Kostas Tsimikas,1996,recovered,surname,,Konstantinos Tsimikas,338070.0
+ENG-Premier League,2223,Southampton,Dominic Ballard,2005,recovered,surname,,Dom Ballard,864496.0
+ENG-Premier League,2223,Southampton,Ibrahima Diallo,1999,corrected,name,Ibrahima Diallo,Ibrahima Diallo,413032.0
+ENG-Premier League,2223,Southampton,Valentino Livramento,2002,recovered,surname,,Tino Livramento,503981.0
+ENG-Premier League,2223,Tottenham,Emerson,1999,corrected,name,Emerson,Emerson Royal,476344.0
+ENG-Premier League,2223,Wolves,Adama Traoré,1996,corrected,name,Adama Traoré,Adama Traoré,204103.0
+ENG-Premier League,2223,Wolves,Joseph Hodge,2002,recovered,surname,,Joe Hodge,503975.0
+ENG-Premier League,2223,Wolves,Max Kilman,1997,recovered,surname,,Maximilian Kilman,525247.0
+ENG-Premier League,2324,Bournemouth,Illia Zabarnyi,2002,recovered,surname,,Ilya Zabarnyi,659089.0
+ENG-Premier League,2324,Brentford,Yehor Yarmoliuk,2004,recovered,surname,,Yegor Yarmolyuk,717411.0
+ENG-Premier League,2324,Brighton,Igor,1998,corrected,name,Igor Vekic,Igor Julio,380350.0
+ENG-Premier League,2324,Burnley,Vitinho,1999,corrected,name,Vitinho,Vitinho,468249.0
+ENG-Premier League,2324,Chelsea,Joshua Acheampong,2006,corrected,name,Joshua,Josh Acheampong,1004708.0
+ENG-Premier League,2324,Fulham,Adama Traoré,1996,corrected,name,Adama Traoré,Adama Traoré,204103.0
+ENG-Premier League,2324,Liverpool,Kostas Tsimikas,1996,recovered,surname,,Konstantinos Tsimikas,338070.0
+ENG-Premier League,2324,Luton Town,Joseph Johnson,2006,recovered,surname,,Joe Johnson,1088818.0
+ENG-Premier League,2324,Manchester Utd,Daniel Gore,2004,recovered,surname,,Dan Gore,747153.0
+ENG-Premier League,2324,Sheffield United,Oliver McBurnie,1996,recovered,surname,,Oli McBurnie,298477.0
+ENG-Premier League,2324,Sheffield United,Vinicius Souza,1999,recovered,surname,,Vini Souza,663581.0
+ENG-Premier League,2324,Tottenham,Emerson,1999,corrected,name,Emerson,Emerson Royal,476344.0
+ENG-Premier League,2324,Wolves,Max Kilman,1997,recovered,surname,,Maximilian Kilman,525247.0
+ENG-Premier League,2425,Aston Villa,Emi Buendía,1996,recovered,surname,,Emiliano Buendía,321247.0
+ENG-Premier League,2425,Bournemouth,Illia Zabarnyi,2002,recovered,surname,,Ilya Zabarnyi,659089.0
+ENG-Premier League,2425,Brentford,Yehor Yarmoliuk,2004,recovered,surname,,Yegor Yarmolyuk,717411.0
+ENG-Premier League,2425,Brighton,Diego Gómez,2003,corrected,name,Diego Gómez,Diego Gómez,996897.0
+ENG-Premier League,2425,Brighton,Igor,1998,corrected,name,Igor Vekic,Igor Julio,380350.0
+ENG-Premier League,2425,Chelsea,Joshua Acheampong,2006,corrected,name,Joshua,Josh Acheampong,1004708.0
+ENG-Premier League,2425,Fulham,Adama Traoré,1996,corrected,name,Adama Traoré,Adama Traoré,204103.0
+ENG-Premier League,2425,Fulham,Joshua King,2007,corrected,name,Joshua,Josh King,1011131.0
+ENG-Premier League,2425,Liverpool,Andy Robertson,1994,recovered,surname,,Andrew Robertson,234803.0
+ENG-Premier League,2425,Liverpool,Kostas Tsimikas,1996,recovered,surname,,Konstantinos Tsimikas,338070.0
+ENG-Premier League,2425,Manchester City,Nicolás González,2002,recovered,surname,,Nico González,466805.0
+ENG-Premier League,2425,Manchester Utd,Chidozie Obi-Martin,2007,recovered,surname,,Chido Obi,1042886.0
+ENG-Premier League,2425,Nottingham,Danilo Santos,2001,corrected,name,Santos,Danilo,808509.0
+ENG-Premier League,2425,Southampton,Ross Stewart,1996,corrected,name,Ross Stewart,Ross Stewart,447995.0
+ENG-Premier League,2425,West Ham,Andy Irving,2000,recovered,surname,,Andrew Irving,430310.0
+ENG-Premier League,2425,West Ham,Max Kilman,1997,recovered,surname,,Maximilian Kilman,525247.0
+ESP-La Liga,2223,Almería,Alejandro Pozo Pozo,1999,recovered,surname,,Álex Pozo,341272.0
+ESP-La Liga,2223,Almería,Álex Centelles,1997,unconfirmed,,Alex,,
+ESP-La Liga,2223,Celta Vigo,Gabriel Veiga,2002,corrected,name,Gabriel,Gabri Veiga,699704.0
+ESP-La Liga,2223,Cádiz,Anthony Lozano,1993,recovered,surname,,Choco Lozano,131275.0
+ESP-La Liga,2223,Cádiz,Isaac Carcelen,1993,recovered,surname,,Iza Carcelén,254037.0
+ESP-La Liga,2223,Cádiz,Mamadou Mbaye,1998,recovered,surname,,Momo Mbaye,490421.0
+ESP-La Liga,2223,Elche,Carmona,2002,corrected,name,Marc Carmona,José Ángel Carmona,711625.0
+ESP-La Liga,2223,Elche,Nicolás Ezequiel Fernández,2000,corrected,surname,Nicolás Fernández,Nicolás Fernández Mercau,739315.0
+ESP-La Liga,2223,Espanyol,Rubén,2001,corrected,name,Rúben Pina,Rubén Sánchez,705813.0
+ESP-La Liga,2223,Espanyol,Vinicius Souza,1999,recovered,surname,,Vini Souza,663581.0
+ESP-La Liga,2223,Getafe,Alejandro Revuelta Montero,2000,recovered,surname,,Álex Revuelta,631093.0
+ESP-La Liga,2223,Getafe,Moises Parra Gutierrez,2002,recovered,surname,,Moi Parra,963150.0
+ESP-La Liga,2223,Girona,Valentín Castellanos,1998,recovered,surname,,Taty Castellanos,522784.0
+ESP-La Liga,2223,Osasuna,Abdessamad Ezzalzouli,2001,recovered,surname,,Abde Ezzalzouli,724520.0
+ESP-La Liga,2223,Osasuna,Ezequiel Ávila,1994,recovered,surname,,Chimy Ávila,167721.0
+ESP-La Liga,2223,Rayo Vallecano,Isaac Palazón Camacho,1994,recovered,surname,,Isi Palazón,362086.0
+ESP-La Liga,2223,Real Madrid,Nacho,1990,corrected,name,Nacho Martínez,Nacho Fernández,58884.0
+ESP-La Liga,2223,Sevilla,Carmona,2002,corrected,name,Marc Carmona,José Ángel Carmona,711625.0
+ESP-La Liga,2223,Sevilla,Fernando,1987,corrected,name,Fernando,Fernando,51174.0
+ESP-La Liga,2223,Sevilla,Marcão,1996,corrected,name,Marcão,Marcão,439022.0
+ESP-La Liga,2223,Valencia,Diego López,2002,corrected,name,Diego López,Diego López,617081.0
+ESP-La Liga,2223,Valencia,Francisco Perez,2002,recovered,surname,,Fran Pérez,622988.0
+ESP-La Liga,2223,Valencia,Nicolás González,2002,recovered,surname,,Nico González,466805.0
+ESP-La Liga,2223,Valencia,Samuel,1999,corrected,name,Samuel,Samuel Lino,694928.0
+ESP-La Liga,2223,Valladolid,Babatunde Akinsola,2003,recovered,surname,,Tunde Akinsola,924447.0
+ESP-La Liga,2223,Villarreal,Fernando Niño,2000,corrected,surname,Fernando,Fer Niño,627294.0
+ESP-La Liga,2425,Alavés,Pica,2002,corrected,name,Marzio Pica,Adrián Pica,895458.0
+ESP-La Liga,2425,Athletic Club,Nicolás Serrano,2003,recovered,surname,,Nico Serrano,668183.0
+ESP-La Liga,2425,Las Palmas,José Carlos González,2006,recovered,surname,,Josito González,1411351.0
+ESP-La Liga,2425,Las Palmas,Oliver McBurnie,1996,recovered,surname,,Oli McBurnie,298477.0
+ESP-La Liga,2425,Leganés,Diego,2000,corrected,name,Diego Luna,Diego García,852727.0
+ESP-La Liga,2425,Leganés,Miguel,1999,corrected,name,Miguel Luís,Miguel de la Fuente,480883.0
+ESP-La Liga,2425,Leganés,Sergi,1992,unconfirmed,,Sergi Gómez,,
+ESP-La Liga,2425,Osasuna,Raúl,2000,corrected,name,Raúl Parra,Raúl García,631002.0
+ESP-La Liga,2425,Rayo Vallecano,Isaac Palazón Camacho,1994,recovered,surname,,Isi Palazón,362086.0
+ESP-La Liga,2425,Real Betis,Ezequiel Ávila,1994,recovered,surname,,Chimy Ávila,167721.0
+ESP-La Liga,2425,Sevilla,Carmona,2002,corrected,name,Marc Carmona,José Ángel Carmona,711625.0
+ESP-La Liga,2425,Sevilla,Marcão,1996,corrected,name,Marcão,Marcão,439022.0
+ESP-La Liga,2425,Valencia,Diego López,2002,corrected,name,Diego López,Diego López,617081.0
+ESP-La Liga,2425,Valencia,Francisco Perez,2002,recovered,surname,,Fran Pérez,622988.0
+ESP-La Liga,2425,Valencia,José Luis García Vayá,1998,unconfirmed,,José García,,
+ESP-La Liga,2425,Valencia,Rodrigo Abajas,2003,recovered,surname,,Ro Abajas,949116.0
+ESP-La Liga,2425,Valladolid,Henrique,1994,corrected,name,Henrique,Henrique Silva,204072.0
+FRA-Ligue 1,2223,Ajaccio,Kouamé Botué,2002,recovered,surname,,Jean Botué,649457.0
+FRA-Ligue 1,2223,Auxerre,Souleymane Touré,2003,recovered,surname,,Isaak Touré,708678.0
+FRA-Ligue 1,2223,Brest,Hianga Mananga Mbock,1999,recovered,surname,,Hianga'a Mbock,684062.0
+FRA-Ligue 1,2223,Clermont Foot,Elba Rashani,1993,recovered,surname,,Elbasan Rashani,149579.0
+FRA-Ligue 1,2223,Lens,Ismaëlben Boura,2000,recovered,surname,,Ismaël Boura,770895.0
+FRA-Ligue 1,2223,Lorient,Ckene Doucouré,2002,recovered,surname,,Siriné Doucouré,802747.0
+FRA-Ligue 1,2223,Lyon,Henrique,1994,corrected,name,Henrique,Henrique Silva,204072.0
+FRA-Ligue 1,2223,Lyon,Jefferson,1999,unconfirmed,,Jefferson Díaz,,
+FRA-Ligue 1,2223,Marseille,Souleymane Touré,2003,recovered,surname,,Isaak Touré,708678.0
+FRA-Ligue 1,2223,Marseille,Vitinha,2000,corrected,name,Vitinha,Vitinha,586853.0
+FRA-Ligue 1,2223,Montpellier,Boubakar Kouyaté,1997,recovered,surname,,Kiki Kouyaté,211637.0
+FRA-Ligue 1,2223,Nantes,João Victor,1998,corrected,name,João Victor,João Victor,671145.0
+FRA-Ligue 1,2223,Nice,Bilal Brahimi,2000,corrected,name,Bilal Brahimi,Billal Brahimi,543051.0
+FRA-Ligue 1,2223,Strasbourg,Mouhamadou Diarra,2004,corrected,surname,Mahamadou Diarra,Habib Diarra,876631.0
+FRA-Ligue 1,2223,Troyes,Amar Ahmed,2004,unconfirmed,,Ahmed Omar,,
+FRA-Ligue 1,2223,Troyes,Jordan Dongmo,2001,recovered,surname,,Danel Dongmo,929612.0
+FRA-Ligue 1,2425,Brest,Sérigné Diop,2005,recovered,surname,,Saliou Diop,1237907.0
+FRA-Ligue 1,2425,Marseille,Emmanuel Koum Mbondo,2006,recovered,surname,,Alexi Koum,955449.0
+FRA-Ligue 1,2425,Montpellier,Boubakar Kouyaté,1997,recovered,surname,,Kiki Kouyaté,211637.0
+FRA-Ligue 1,2425,Montpellier,Musa Al-Taamari,1997,recovered,surname,,Mousa Tamari,551505.0
+FRA-Ligue 1,2425,Nantes,Douglas,1997,corrected,name,Douglas Luiz,Douglas Augusto,393621.0
+FRA-Ligue 1,2425,Nice,Bilal Brahimi,2000,corrected,name,Bilal Brahimi,Billal Brahimi,543051.0
+FRA-Ligue 1,2425,Reims,Niama Sissoko,2005,recovered,surname,,Pape Sissoko,1228320.0
+FRA-Ligue 1,2425,Rennes,Musa Al-Taamari,1997,recovered,surname,,Mousa Tamari,551505.0
+GER-Bundesliga,2223,Bochum,Kostas Stafylidis,1993,recovered,surname,,Konstantinos Stafylidis,148967.0
+GER-Bundesliga,2223,Dortmund,Gio Reyna,2002,recovered,surname,,Giovanni Reyna,504215.0
+GER-Bundesliga,2223,Eint Frankfurt,Obite N'Dicka,1999,recovered,surname,,Evan Ndicka,371149.0
+GER-Bundesliga,2223,Hertha BSC,Agustín Rogel,1997,unconfirmed,,Agustín Rogel,,
+GER-Bundesliga,2223,Hertha BSC,Marc-Oliver Kempf,1995,unconfirmed,,Marc Oliver Kempf,,
+GER-Bundesliga,2223,Hertha BSC,Márton Dárdai,2002,unconfirmed,,Márton Dárdai,,
+GER-Bundesliga,2223,Hoffenheim,Moanes Dabbur,1992,recovered,surname,,Munas Dabbur,145866.0
+GER-Bundesliga,2223,Köln,Julian Chabot,1998,recovered,surname,,Jeff Chabot,303219.0
+GER-Bundesliga,2223,Leverkusen,Paulinho,2000,corrected,name,Paulinho,Paulinho,428791.0
+GER-Bundesliga,2223,M'Gladbach,Kouadio Koné,2001,recovered,surname,,Manu Koné,624690.0
+GER-Bundesliga,2425,Dortmund,Gio Reyna,2002,recovered,surname,,Giovanni Reyna,504215.0
+GER-Bundesliga,2425,Freiburg,Ifechukwu Ogbus,2005,recovered,surname,,Bruno Ogbus,863759.0
+GER-Bundesliga,2425,Leverkusen,Emi Buendía,1996,recovered,surname,,Emiliano Buendía,321247.0
+GER-Bundesliga,2425,Leverkusen,Álex Grimaldo,1995,recovered,surname,,Alejandro Grimaldo,193082.0
+GER-Bundesliga,2425,St Pauli,Finley Stevens,2003,recovered,surname,,Fin Stevens,587019.0
+GER-Bundesliga,2425,Stuttgart,Julian Chabot,1998,recovered,surname,,Jeff Chabot,303219.0
+ITA-Serie A,2223,Fiorentina,Arthur,1998,corrected,name,Arthur,Arthur Cabral,390638.0
+ITA-Serie A,2223,Fiorentina,Igor,1998,corrected,name,Igor Vekic,Igor Julio,380350.0
+ITA-Serie A,2223,Fiorentina,Nicolás González,1998,corrected,surname,Nicolas,Nico González,486031.0
+ITA-Serie A,2223,Juventus,Danilo,1991,corrected,name,Danilo,Danilo,145707.0
+ITA-Serie A,2223,Monza,Carlos,1999,corrected,name,Zé Carlos,Carlos Augusto,585982.0
+ITA-Serie A,2223,Roma,Mohamed Camara,1997,corrected,surname,Mohamed Camara,Mady Camara,481173.0
+ITA-Serie A,2223,Spezia,Salvador Ferrer,1998,recovered,surname,,Salva Ferrer,624548.0
+ITA-Serie A,2425,Bologna,Babis Lykogiannis,1993,recovered,surname,,Charalampos Lykogiannis,136514.0
+ITA-Serie A,2425,Empoli,Faustino Anjorin,2001,recovered,surname,,Tino Anjorin,433181.0
+ITA-Serie A,2425,Genoa,Vitinha,2000,corrected,name,Vitinha,Vitinha,586853.0
+ITA-Serie A,2425,Hellas Verona,Daniel Bandeira,2000,unconfirmed,,Bandeira,,
+ITA-Serie A,2425,Juventus,Danilo,1991,corrected,name,Danilo,Danilo,145707.0
+ITA-Serie A,2425,Juventus,Nicolás González,1998,corrected,surname,Nicolas,Nico González,486031.0
+ITA-Serie A,2425,Lazio,Valentín Castellanos,1998,recovered,surname,,Taty Castellanos,522784.0
+ITA-Serie A,2425,Milan,Emerson,1999,corrected,name,Emerson,Emerson Royal,476344.0
+ITA-Serie A,2425,Roma,Obite N'Dicka,1999,recovered,surname,,Evan Ndicka,371149.0
+ITA-Serie A,2425,Udinese,Souleymane Touré,2003,recovered,surname,,Isaak Touré,708678.0

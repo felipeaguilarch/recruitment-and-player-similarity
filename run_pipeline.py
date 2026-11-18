@@ -11,7 +11,9 @@ a stage you have deliberately changed.
 
 Cold-start cost, roughly:
     fetch-fbref          60-120 min   rate-limited to ~1 request / 3 s
+    fetch-fbref-archive  5-10 min     archived pages, ~2 s apart
     fetch-transfermarkt  3-10 min     one ~241 MB download
+    fetch-tm-contracts   1-2 min      seven ~1-5 MB snapshots
     merge                1-3 min      the fuzzy name join dominates
     features             < 1 min
     similarity           1-2 min      UMAP is the slow part
@@ -31,7 +33,9 @@ import time
 
 STAGES: list[tuple[str, str]] = [
         ("fetch-fbref", "Download FBref player and team season stats"),
+        ("fetch-fbref-archive", "Recover FBref advanced stats from the Wayback Machine"),
         ("fetch-transfermarkt", "Download transfermarkt-datasets market values"),
+        ("fetch-tm-contracts", "Dated contract observations from the raw TM scrapes"),
         ("merge", "Join the two sources into one player-season table"),
         ("features", "Per-90, possession-adjust, percentile-rank"),
         ("similarity", "Fit PCA + cosine kNN per position group"),
@@ -45,9 +49,15 @@ def run_stage(name: str, force: bool) -> None:
         if name == "fetch-fbref":
                 from src import fetch_fbref
                 fetch_fbref.run(force=force)
+        elif name == "fetch-fbref-archive":
+                from src import fetch_fbref_archive
+                fetch_fbref_archive.run(force=force)
         elif name == "fetch-transfermarkt":
                 from src import fetch_transfermarkt
                 fetch_transfermarkt.run(force=force)
+        elif name == "fetch-tm-contracts":
+                from src import fetch_tm_contracts
+                fetch_tm_contracts.run(force=force)
         elif name == "merge":
                 from src import merge
                 merge.run(force=force)
