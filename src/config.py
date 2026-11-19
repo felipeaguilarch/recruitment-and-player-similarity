@@ -464,6 +464,11 @@ UNDERVALUED_LOG_THRESHOLD: float = 0.5
 # Drop player-seasons with no market value, or with implausible ones.
 MIN_MARKET_VALUE_EUR: int = 50_000
 
+# The value stage stops if fewer than this share of feature rows carry a usable
+# market value. Normally ~99% do; anything near half means the FBref ->
+# Transfermarkt name join has partly failed, which a fixed row count misses.
+MIN_VALUE_COVERAGE: float = 0.5
+
 
 # ---------------------------------------------------------------------------
 # Name matching

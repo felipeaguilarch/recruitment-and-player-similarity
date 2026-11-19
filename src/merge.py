@@ -255,7 +255,12 @@ def confirm_by_club(df: pd.DataFrame, players: pd.DataFrame) -> pd.DataFrame:
                           a surname and clearly beats every other candidate
                           (see _same_surname); use him
           * recovered   - the row had no match, and such a player exists
-          * unconfirmed - no such player; the name match is kept as it was
+          * unconfirmed - no such player, but the names match almost exactly
+                          (>= 90); kept, since the gap is usually in the
+                          appearances data (Hertha 2022-23)
+          * unlinked    - no such player and the names differ too; the match
+                          is dropped rather than trusted ("Jose Luis Garcia
+                          Vaya" had been linked to a different Jose Garcia)
           * override    - manual overrides are never second-guessed
 
         Every row that is not plainly confirmed is written to
@@ -323,12 +328,17 @@ def confirm_by_club(df: pd.DataFrame, players: pd.DataFrame) -> pd.DataFrame:
                         df.at[idx, "tm_sub_position"] = tm.at[new, "sub_position"]
                         status.append(label)
                 else:
-                        status.append("unconfirmed" if pd.notna(current) else "unmatched")
-                        if pd.notna(current):
-                                report.append({"league": df.at[idx, "league"], "season": df.at[idx, "season"],
-                                               "team": df.at[idx, "team"], "player": df.at[idx, "player"], "born": born,
-                                               "status": "unconfirmed", "via": None, "old_tm_name": df.at[idx, "tm_name"],
-                                               "new_tm_name": None, "new_tm_player_id": None})
+                        if pd.isna(current):
+                                status.append("unmatched")
+                                continue
+                        label = "unconfirmed" if close.iat[pos] else "unlinked"
+                        report.append({"league": df.at[idx, "league"], "season": df.at[idx, "season"],
+                                       "team": df.at[idx, "team"], "player": df.at[idx, "player"], "born": born,
+                                       "status": label, "via": None, "old_tm_name": df.at[idx, "tm_name"],
+                                       "new_tm_name": None, "new_tm_player_id": None})
+                        if label == "unlinked":
+                                df.loc[idx, ["tm_player_id", "tm_name", "tm_sub_position"]] = np.nan
+                        status.append(label)
 
         df["club_check"] = status
         pd.DataFrame(report).to_csv(paths.MATCH_CLUB_CHECK, index=False)

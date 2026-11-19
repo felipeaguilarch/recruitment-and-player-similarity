@@ -41,7 +41,7 @@ ENG-Premier League,2425,Southampton,Ross Stewart,1996,corrected,name,Ross Stewar
 ENG-Premier League,2425,West Ham,Andy Irving,2000,recovered,surname,,Andrew Irving,430310.0
 ENG-Premier League,2425,West Ham,Max Kilman,1997,recovered,surname,,Maximilian Kilman,525247.0
 ESP-La Liga,2223,Almería,Alejandro Pozo Pozo,1999,recovered,surname,,Álex Pozo,341272.0
-ESP-La Liga,2223,Almería,Álex Centelles,1997,unconfirmed,,Alex,,
+ESP-La Liga,2223,Almería,Álex Centelles,1997,unlinked,,Alex,,
 ESP-La Liga,2223,Celta Vigo,Gabriel Veiga,2002,corrected,name,Gabriel,Gabri Veiga,699704.0
 ESP-La Liga,2223,Cádiz,Anthony Lozano,1993,recovered,surname,,Choco Lozano,131275.0
 ESP-La Liga,2223,Cádiz,Isaac Carcelen,1993,recovered,surname,,Iza Carcelén,254037.0
@@ -72,7 +72,7 @@ ESP-La Liga,2425,Las Palmas,José Carlos González,2006,recovered,surname,,Josit
 ESP-La Liga,2425,Las Palmas,Oliver McBurnie,1996,recovered,surname,,Oli McBurnie,298477.0
 ESP-La Liga,2425,Leganés,Diego,2000,corrected,name,Diego Luna,Diego García,852727.0
 ESP-La Liga,2425,Leganés,Miguel,1999,corrected,name,Miguel Luís,Miguel de la Fuente,480883.0
-ESP-La Liga,2425,Leganés,Sergi,1992,unconfirmed,,Sergi Gómez,,
+ESP-La Liga,2425,Leganés,Sergi,1992,unlinked,,Sergi Gómez,,
 ESP-La Liga,2425,Osasuna,Raúl,2000,corrected,name,Raúl Parra,Raúl García,631002.0
 ESP-La Liga,2425,Rayo Vallecano,Isaac Palazón Camacho,1994,recovered,surname,,Isi Palazón,362086.0
 ESP-La Liga,2425,Real Betis,Ezequiel Ávila,1994,recovered,surname,,Chimy Ávila,167721.0
@@ -80,7 +80,7 @@ ESP-La Liga,2425,Sevilla,Carmona,2002,corrected,name,Marc Carmona,José Ángel C
 ESP-La Liga,2425,Sevilla,Marcão,1996,corrected,name,Marcão,Marcão,439022.0
 ESP-La Liga,2425,Valencia,Diego López,2002,corrected,name,Diego López,Diego López,617081.0
 ESP-La Liga,2425,Valencia,Francisco Perez,2002,recovered,surname,,Fran Pérez,622988.0
-ESP-La Liga,2425,Valencia,José Luis García Vayá,1998,unconfirmed,,José García,,
+ESP-La Liga,2425,Valencia,José Luis García Vayá,1998,unlinked,,José García,,
 ESP-La Liga,2425,Valencia,Rodrigo Abajas,2003,recovered,surname,,Ro Abajas,949116.0
 ESP-La Liga,2425,Valladolid,Henrique,1994,corrected,name,Henrique,Henrique Silva,204072.0
 FRA-Ligue 1,2223,Ajaccio,Kouamé Botué,2002,recovered,surname,,Jean Botué,649457.0
@@ -90,14 +90,14 @@ FRA-Ligue 1,2223,Clermont Foot,Elba Rashani,1993,recovered,surname,,Elbasan Rash
 FRA-Ligue 1,2223,Lens,Ismaëlben Boura,2000,recovered,surname,,Ismaël Boura,770895.0
 FRA-Ligue 1,2223,Lorient,Ckene Doucouré,2002,recovered,surname,,Siriné Doucouré,802747.0
 FRA-Ligue 1,2223,Lyon,Henrique,1994,corrected,name,Henrique,Henrique Silva,204072.0
-FRA-Ligue 1,2223,Lyon,Jefferson,1999,unconfirmed,,Jefferson Díaz,,
+FRA-Ligue 1,2223,Lyon,Jefferson,1999,unlinked,,Jefferson Díaz,,
 FRA-Ligue 1,2223,Marseille,Souleymane Touré,2003,recovered,surname,,Isaak Touré,708678.0
 FRA-Ligue 1,2223,Marseille,Vitinha,2000,corrected,name,Vitinha,Vitinha,586853.0
 FRA-Ligue 1,2223,Montpellier,Boubakar Kouyaté,1997,recovered,surname,,Kiki Kouyaté,211637.0
 FRA-Ligue 1,2223,Nantes,João Victor,1998,corrected,name,João Victor,João Victor,671145.0
 FRA-Ligue 1,2223,Nice,Bilal Brahimi,2000,corrected,name,Bilal Brahimi,Billal Brahimi,543051.0
 FRA-Ligue 1,2223,Strasbourg,Mouhamadou Diarra,2004,corrected,surname,Mahamadou Diarra,Habib Diarra,876631.0
-FRA-Ligue 1,2223,Troyes,Amar Ahmed,2004,unconfirmed,,Ahmed Omar,,
+FRA-Ligue 1,2223,Troyes,Amar Ahmed,2004,unlinked,,Ahmed Omar,,
 FRA-Ligue 1,2223,Troyes,Jordan Dongmo,2001,recovered,surname,,Danel Dongmo,929612.0
 FRA-Ligue 1,2425,Brest,Sérigné Diop,2005,recovered,surname,,Saliou Diop,1237907.0
 FRA-Ligue 1,2425,Marseille,Emmanuel Koum Mbondo,2006,recovered,surname,,Alexi Koum,955449.0
@@ -133,7 +133,7 @@ ITA-Serie A,2223,Spezia,Salvador Ferrer,1998,recovered,surname,,Salva Ferrer,624
 ITA-Serie A,2425,Bologna,Babis Lykogiannis,1993,recovered,surname,,Charalampos Lykogiannis,136514.0
 ITA-Serie A,2425,Empoli,Faustino Anjorin,2001,recovered,surname,,Tino Anjorin,433181.0
 ITA-Serie A,2425,Genoa,Vitinha,2000,corrected,name,Vitinha,Vitinha,586853.0
-ITA-Serie A,2425,Hellas Verona,Daniel Bandeira,2000,unconfirmed,,Bandeira,,
+ITA-Serie A,2425,Hellas Verona,Daniel Bandeira,2000,unlinked,,Bandeira,,
 ITA-Serie A,2425,Juventus,Danilo,1991,corrected,name,Danilo,Danilo,145707.0
 ITA-Serie A,2425,Juventus,Nicolás González,1998,corrected,surname,Nicolas,Nico González,486031.0
 ITA-Serie A,2425,Lazio,Valentín Castellanos,1998,recovered,surname,,Taty Castellanos,522784.0

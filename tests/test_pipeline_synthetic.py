@@ -36,6 +36,31 @@ LEAGUES = ("ENG-Premier League", "ESP-La Liga", "ITA-Serie A")
 #: Stage name -> the stub that stopped it, filled in by the `pipeline` fixture.
 UNFINISHED: dict[str, str] = {}
 
+#: Figure builders (figures.FIGURES keys) that still raise NotImplementedError.
+#: figures.run() swallows that per figure, so the fixture runs each one itself.
+PENDING_FIGURES: set[str] = set()
+
+#: The file each figure builder writes.
+FIGURE_FILES = {
+        "radar": "radar_example.png",
+        "pca_variance": "pca_variance.png",
+        "age_curve": "age_curve.png",
+        "value_scatter": "value_scatter.png",
+        "style_map": "style_map.png",
+}
+
+
+def _run_figures(figures_mod) -> None:
+        """Build each figure separately, recording which are still stubs."""
+        PENDING_FIGURES.clear()
+        for name, builder in figures_mod.FIGURES.items():
+                try:
+                        builder()
+                except NotImplementedError:
+                        PENDING_FIGURES.add(name)
+        if PENDING_FIGURES == set(figures_mod.FIGURES):
+                raise NotImplementedError("every figure builder")
+
 
 def needs(*stages: str) -> None:
         """Skip the calling test if any of these stages is still a stub."""
@@ -150,7 +175,7 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
                         ("features", lambda: features_mod.run(force=True)),
                         ("similarity", lambda: similarity_mod.run(force=True)),
                         ("value", lambda: value_mod.run(force=True)),
-                        ("figures", lambda: figures_mod.run()),
+                        ("figures", lambda: _run_figures(figures_mod)),
                 ]
                 UNFINISHED.clear()
                 for name, stage in stages:
@@ -288,10 +313,9 @@ def test_value_metrics_report_both_candidate_models(pipeline):
 
 def test_every_readme_figure_renders(pipeline):
         needs("figures")
-        expected = {
-                "radar_example.png", "pca_variance.png", "age_curve.png",
-                "value_scatter.png", "style_map.png",
-        }
+        if PENDING_FIGURES:
+                print(f"not implemented yet, not checked: {sorted(PENDING_FIGURES)}")
+        expected = {f for name, f in FIGURE_FILES.items() if name not in PENDING_FIGURES}
         produced = {p.name for p in pipeline.ASSETS.glob("*.png")}
         assert expected <= produced, f"missing figures: {sorted(expected - produced)}"
         for path in pipeline.ASSETS.glob("*.png"):

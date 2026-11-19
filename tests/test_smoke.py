@@ -312,13 +312,13 @@ def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypa
         })
         monkeypatch.setattr(merge, "load_club_seasons", lambda: club_seasons)
         df = pd.DataFrame({
-                "league": ["ENG-Premier League"] * 5, "season": ["2324"] * 5, "team": ["Brighton"] * 5,
-                "player": ["Igor", "Anna Smith", "Bea Jones", "Cleo Brown", "Dana White"],
-                "born": [1998, 1995, 1996, 1997, 1994],
-                "tm_player_id": [1.0, 3.0, 4.0, 5.0, 7.0],
-                "tm_name": ["Igor Vekic", "Anna Smith", "Bea Jones", "Cleo Brown", "Eve Black"],
-                "tm_sub_position": ["Goalkeeper", "Left Winger", "Centre-Forward", "Right-Back", "Left-Back"],
-                "match_decision": ["accepted", "accepted", "accepted", "accepted", "override"],
+                "league": ["ENG-Premier League"] * 6, "season": ["2324"] * 6, "team": ["Brighton"] * 6,
+                "player": ["Igor", "Anna Smith", "Bea Jones", "Cleo Brown", "Dana White", "Zed Green"],
+                "born": [1998, 1995, 1996, 1997, 1994, 1999],
+                "tm_player_id": [1.0, 3.0, 4.0, 5.0, 7.0, 7.0],
+                "tm_name": ["Igor Vekic", "Anna Smith", "Bea Jones", "Cleo Brown", "Eve Black", "Eve Black"],
+                "tm_sub_position": ["Goalkeeper", "Left Winger", "Centre-Forward", "Right-Back", "Left-Back", "Left-Back"],
+                "match_decision": ["accepted", "accepted", "accepted", "accepted", "override", "accepted"],
         })
 
         out = merge.confirm_by_club(df, players)
@@ -329,4 +329,6 @@ def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypa
         assert (out.loc[1:3, "club_check"] == "confirmed").all()
         assert out.loc[4, "club_check"] == "override"             # never second-guessed
         assert out.loc[4, "tm_name"] == "Eve Black"
+        assert out.loc[5, "club_check"] == "unlinked"            # wrong club AND wrong name
+        assert pd.isna(out.loc[5, "tm_player_id"])
         assert "match_decision" not in out.columns

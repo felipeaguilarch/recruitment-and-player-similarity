@@ -1,0 +1,17 @@
+{
+  "ridge": {
+    "cv_mae_log": 0.5959872393415566,
+    "cv_r2_log": 0.6147207895742781,
+    "median_absolute_percentage_error": 45.02170776463423,
+    "median_ratio": 0.9677873693339463,
+    "median_absolute_error_eur": 3373886.1986198863
+  },
+  "gbm": {
+    "cv_mae_log": 0.600995307434414,
+    "cv_r2_log": 0.6060194990141918,
+    "median_absolute_percentage_error": 45.45930304770255,
+    "median_ratio": 0.966572609000877,
+    "median_absolute_error_eur": 3403347.3714184733
+  },
+  "selected_model": "ridge"
+}

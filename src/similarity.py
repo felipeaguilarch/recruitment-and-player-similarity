@@ -1,4 +1,4 @@
-"""Stage 4 - PCA per position group, then cosine kNN.  [YOU IMPLEMENT THIS]
+"""Stage 4 - PCA per position group, then cosine kNN.
 
 Two design decisions here are worth defending in the README, because they are
 where most "find similar players" projects go wrong.
@@ -6,26 +6,25 @@ where most "find similar players" projects go wrong.
 **Cosine, not Euclidean.** On standardised PCA scores, cosine distance
 compares the *shape* of a profile and largely ignores its magnitude - which is
 what "plays like him" means. Euclidean blends style with level, so it returns
-the same handful of elite players as comparables for everybody. Try both and
-look at the output; the difference is obvious once you see it.
+the same handful of elite players as comparables for everybody.
 
 **Search in PCA space, plot in UMAP space.** UMAP produces a much nicer 2-D
 scatter and is worth having in the app as a style map. It is the wrong tool
 for the neighbour search: the embedding deliberately distorts global distances
 to preserve local structure, so distances between distant points carry no
-meaning and shift when you refit. Label the map as a picture, not the model.
+meaning and shift on every refit. The map is a picture, not the model.
 
 Outputs:
   artifacts/similarity_models.joblib   fitted pipeline + index per group
   data/processed/similarity.parquet    top-N neighbours per player-season
   data/processed/style_map.parquet     2-D coordinates for the scatter
-  reports/pca_loadings.csv             name your style dimensions from this
+  reports/pca_loadings.csv             component loadings, for naming styles
+  reports/similarity_validation.json   same-player self-consistency check
 
 Spec: tests/test_pipeline_synthetic.py. The index-alignment tests
 (test_comparables_stay_inside_their_position_group,
-test_neighbours_exclude_self_and_rank_from_one) are the ones that will catch
-your bugs - kNN returns positional indices into the matrix you fitted, not
-player ids, and conflating the two is the classic mistake here.
+test_neighbours_exclude_self_and_rank_from_one) guard the classic mistake
+here: kNN returns positional indices into the fitted matrix, not player ids.
 """
 
 from __future__ import annotations
@@ -178,12 +177,12 @@ def neighbours_frame(models: dict[str, dict]) -> pd.DataFrame:
 
 
 def loadings_frame(models: dict[str, dict]) -> pd.DataFrame:
-        """PCA loadings, long format - the input to naming your style dimensions.
+        """PCA loadings, long format - the input for naming style dimensions.
 
-        Read the output and give the first three components per group a
-        football name. If PC1 on wingers reads as "carries and shoots a lot"
-        and PC2 as "crosses rather than cuts inside", you have dimensions a
-        scout recognises, and that narrative is half the value of the project.
+        The first few components per group are meant to get a football name:
+        if PC1 on wingers reads as "carries and shoots a lot" and PC2 as
+        "crosses rather than cuts inside", those are dimensions a scout
+        recognises.
 
         Returns position_group, component ("PC1"...), explained_variance_ratio,
         feature and loading. Rows are sorted by group, component number and
@@ -302,9 +301,9 @@ def validate(neighbours: pd.DataFrame) -> dict:
         has no same_player row, so it is left out rather than counted as a
         miss. The numbers therefore flatter the model somewhat.
 
-        Interpreting it: single-digit median is good. If it is in the dozens,
-        either your features describe the team more than the player, or seasons
-        are being standardised so differently that the same player drifts.
+        Interpreting it: a single-digit median is good. In the dozens, either
+        the features describe the team more than the player, or seasons are
+        standardised so differently that the same player drifts.
 
         Raises ValueError if there are no same-player neighbours at all.
         """
