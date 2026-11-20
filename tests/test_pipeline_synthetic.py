@@ -40,6 +40,11 @@ UNFINISHED: dict[str, str] = {}
 #: figures.run() swallows that per figure, so the fixture runs each one itself.
 PENDING_FIGURES: set[str] = set()
 
+#: Figure builders that raised anything else, with the error. Recorded rather
+#: than raised so a bug in one figure fails only the figures test, not every
+#: test that shares the pipeline fixture.
+FAILED_FIGURES: dict[str, str] = {}
+
 #: The file each figure builder writes.
 FIGURE_FILES = {
         "radar": "radar_example.png",
@@ -51,13 +56,16 @@ FIGURE_FILES = {
 
 
 def _run_figures(figures_mod) -> None:
-        """Build each figure separately, recording which are still stubs."""
+        """Build each figure separately, recording stubs and failures."""
         PENDING_FIGURES.clear()
+        FAILED_FIGURES.clear()
         for name, builder in figures_mod.FIGURES.items():
                 try:
                         builder()
                 except NotImplementedError:
                         PENDING_FIGURES.add(name)
+                except Exception as exc:  # noqa: BLE001
+                        FAILED_FIGURES[name] = f"{type(exc).__name__}: {exc}"
         if PENDING_FIGURES == set(figures_mod.FIGURES):
                 raise NotImplementedError("every figure builder")
 
@@ -315,6 +323,8 @@ def test_every_readme_figure_renders(pipeline):
         needs("figures")
         if PENDING_FIGURES:
                 print(f"not implemented yet, not checked: {sorted(PENDING_FIGURES)}")
+        assert not FAILED_FIGURES, "figure builders raised: " + "; ".join(
+                f"{name} -> {error}" for name, error in FAILED_FIGURES.items())
         expected = {f for name, f in FIGURE_FILES.items() if name not in PENDING_FIGURES}
         produced = {p.name for p in pipeline.ASSETS.glob("*.png")}
         assert expected <= produced, f"missing figures: {sorted(expected - produced)}"

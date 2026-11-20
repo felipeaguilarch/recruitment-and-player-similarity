@@ -315,10 +315,13 @@ def player_groups(frame: pd.DataFrame) -> np.ndarray:
         """One string key per player, for grouped cross-validation.
 
         The key is the Transfermarkt id ("tm:123") where the name join found
-        one. Otherwise it falls back to the FBref name and birth year
-        ("fbref:Name|2001"), or to the player part of player_season_id. Every
-        key is a string: GroupKFold sorts the groups, and a mix of numeric ids
-        and name strings cannot be sorted.
+        one. Otherwise it falls back to the FBref name ("fbref:Ben White"),
+        taken from the `player` column or from the first part of
+        player_season_id ("Ben_White__2223__Arsenal"). Two namesakes without
+        ids then share a group, which is the safe direction: it can only keep
+        rows out of each other's training folds, never leak one into another.
+        Every key is a string: GroupKFold sorts the groups, and a mix of
+        numeric ids and name strings cannot be sorted.
 
         Groups are players - never seasons or clubs - so all of a player's
         seasons fall in the same fold.
@@ -326,10 +329,10 @@ def player_groups(frame: pd.DataFrame) -> np.ndarray:
         Raises SystemExit if the frame has no player identifier at all.
         """
         if "player" in frame.columns:
-                born = frame["born"].astype(str) if "born" in frame.columns else ""
-                fallback = "fbref:" + frame["player"].astype(str) + "|" + born
+                fallback = "fbref:" + frame["player"].astype(str)
         elif "player_season_id" in frame.columns:
-                fallback = "fbref:" + frame["player_season_id"].str.rsplit("__", n=1).str[0]
+                name = frame["player_season_id"].astype(str).str.split("__").str[0]
+                fallback = "fbref:" + name.str.replace("_", " ")
         else:
                 fallback = None
 

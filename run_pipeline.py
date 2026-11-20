@@ -14,7 +14,7 @@ Cold-start cost, roughly:
     fetch-fbref-archive  5-10 min     archived pages, ~2 s apart
     fetch-transfermarkt  3-10 min     one ~241 MB download
     fetch-tm-contracts   1-2 min      seven ~1-5 MB snapshots
-    merge                1-3 min      the fuzzy name join dominates
+    merge                5-7 min      the fuzzy name join and club check dominate
     features             < 1 min
     similarity           1-2 min      UMAP is the slow part
     value                1-3 min      cross-validation x 2 models
@@ -22,6 +22,8 @@ Cold-start cost, roughly:
 
 Only `fetch-fbref` is genuinely expensive, and soccerdata caches the raw HTML
 under ~/soccerdata, so the second cold start is far quicker than the first.
+The interim tables are committed, though, so a fresh clone skips every fetch
+stage and rebuilds from `merge` onward offline.
 """
 
 from __future__ import annotations

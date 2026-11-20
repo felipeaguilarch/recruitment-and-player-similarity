@@ -37,6 +37,7 @@ TM_PLAYERS = INTERIM / "tm_players.parquet"
 TM_VALUATIONS = INTERIM / "tm_valuations.parquet"
 TM_CONTRACTS = INTERIM / "tm_contract_observations.parquet"
 TM_CLUB_SEASONS = INTERIM / "tm_club_seasons.parquet"
+TM_TRANSFERS = INTERIM / "tm_transfers.parquet"
 NAME_MATCHES = INTERIM / "name_matches.parquet"
 
 # --- processed (committed; the app reads these) ---

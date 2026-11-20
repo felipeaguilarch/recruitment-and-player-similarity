@@ -496,6 +496,14 @@ TM_ZIP_URL: str = (
         "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/transfermarkt-datasets.zip"
 )
 
+# md5 of the archive every number in this repo was built from (data current to
+# 2026-07-06). Upstream republishes to the same URL, so once its updates resume
+# a re-download would silently change values, contracts and the club check.
+# fetch_transfermarkt refuses an archive that does not match. To move to newer
+# data on purpose, update this AND fetch_tm_contracts.CURRENT_OBSERVED_ON (the
+# day the new players.csv is current to). None disables the check.
+TM_ZIP_MD5: str | None = "241e59deea96116fe961c1a29b56cfbc"
+
 # Tables actually used. The zip contains twelve; unpacking only these keeps
 # data/raw manageable.
 TM_TABLES: list[str] = ["players", "player_valuations", "competitions", "clubs"]

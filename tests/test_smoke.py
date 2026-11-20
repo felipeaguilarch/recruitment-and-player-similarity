@@ -332,3 +332,55 @@ def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypa
         assert out.loc[5, "club_check"] == "unlinked"            # wrong club AND wrong name
         assert pd.isna(out.loc[5, "tm_player_id"])
         assert "match_decision" not in out.columns
+
+
+# --- value model groups ----------------------------------------------------
+
+def test_value_groups_keep_a_player_together_across_seasons():
+        from src.value_model import player_groups
+
+        frame = pd.DataFrame({
+                "player": ["Ben White", "Ben White", "Rodri", "Rodri"],
+                "tm_player_id": [1.0, 1.0, np.nan, np.nan],
+                "player_season_id": [
+                        "Ben_White__2223__Arsenal", "Ben_White__2425__Arsenal",
+                        "Rodri__2223__Man_City", "Rodri__2425__Man_City",
+                ],
+        })
+        for f in (frame, frame.drop(columns="player"), frame.drop(columns=["player", "tm_player_id"])):
+                groups = player_groups(f)
+                assert all(isinstance(g, str) for g in groups)    # sortable by GroupKFold
+                assert groups[0] == groups[1] and groups[2] == groups[3]
+                assert groups[0] != groups[2]
+
+
+# --- pinned Transfermarkt archive --------------------------------------------
+
+def test_transfermarkt_download_refuses_a_different_archive(monkeypatch, tmp_path):
+        from src import fetch_transfermarkt
+
+        class FakeResponse:
+                headers = {"Content-Length": "4"}
+
+                def __enter__(self):
+                        return self
+
+                def __exit__(self, *exc):
+                        return False
+
+                def raise_for_status(self):
+                        pass
+
+                def iter_content(self, chunk_size):
+                        yield b"new!"
+
+        zip_path = tmp_path / "transfermarkt-datasets.zip"
+        zip_path.write_bytes(b"old archive")
+        monkeypatch.setattr(fetch_transfermarkt.paths, "TM_ZIP", zip_path)
+        monkeypatch.setattr(fetch_transfermarkt.paths, "ensure_dirs", lambda: None)
+        monkeypatch.setattr(fetch_transfermarkt.requests, "get", lambda *a, **k: FakeResponse())
+
+        with pytest.raises(SystemExit, match="not the one this project was built from"):
+                fetch_transfermarkt.download_zip(force=True)
+        assert zip_path.read_bytes() == b"old archive"            # good copy untouched
+        assert list(tmp_path.iterdir()) == [zip_path]             # no .part left behind

@@ -40,7 +40,9 @@ or slightly early end date.
 
 **Fragility.** The store garbage-collects unreferenced objects: snapshots
 older than June 2025 are already gone from it. Downloads are cached under
-data/raw/transfermarkt/contracts/ so a clone that ran once keeps working.
+data/raw/transfermarkt/contracts/, and the stage's output
+(data/interim/tm_contract_observations.parquet) is committed, so the
+contracts survive even if every pinned snapshot is collected.
 """
 
 from __future__ import annotations
@@ -141,7 +143,13 @@ def load_transfers() -> pd.DataFrame:
 
         The table lists scheduled loan returns years ahead (2030-06-30); only
         moves that had happened by the data cut-off are evidence of anything.
+
+        Cached in paths.TM_TRANSFERS (committed), so merge runs on a fresh clone
+        without the 240 MB archive. fetch_transfermarkt deletes the cache when
+        it rebuilds from a new archive.
         """
+        if paths.TM_TRANSFERS.exists():
+                return pd.read_parquet(paths.TM_TRANSFERS)
         with zipfile.ZipFile(paths.TM_ZIP) as zf:
                 name = next(n for n in zf.namelist() if n.rsplit("/", 1)[-1].startswith("transfers.csv"))
                 with zf.open(name) as fh:
@@ -151,7 +159,10 @@ def load_transfers() -> pd.DataFrame:
                         )
         transfers["transfer_date"] = pd.to_datetime(transfers["transfer_date"], errors="coerce")
         cutoff = pd.Timestamp(CURRENT_OBSERVED_ON)
-        return transfers[transfers["transfer_date"] <= cutoff].dropna()
+        transfers = transfers[transfers["transfer_date"] <= cutoff].dropna().reset_index(drop=True)
+        transfers.to_parquet(paths.TM_TRANSFERS, index=False)
+        logger.info("Wrote %s (%s transfers)", paths.TM_TRANSFERS, len(transfers))
+        return transfers
 
 
 # --- choosing an observation -------------------------------------------------

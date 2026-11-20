@@ -19,11 +19,16 @@ current to 2026-07-06, `player_valuations` stops at 2026-06-12, and 2026/27
 squads are not covered. 2025-26 is therefore the newest season with usable
 values - which is why config.SEASONS ends at "2526".
 https://github.com/dcaribou/transfermarkt-datasets/discussions/383
+
+The download URL always serves the latest release, so the archive is pinned
+by md5 (config.TM_ZIP_MD5): if upstream resumes, a re-download that no longer
+matches is refused rather than silently changing every number downstream.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import logging
 import zipfile
 
@@ -47,16 +52,32 @@ def download_zip(force: bool = False) -> None:
 
         logger.info("Downloading %s", config.TM_ZIP_URL)
         headers = {"User-Agent": config.USER_AGENT}
+        # Download beside the real file and only swap it in once it verifies, so
+        # a mismatched or interrupted download never replaces a good archive.
+        partial = paths.TM_ZIP.with_name(paths.TM_ZIP.name + ".part")
+        digest = hashlib.md5()
         with requests.get(config.TM_ZIP_URL, stream=True, timeout=120, headers=headers) as resp:
                 resp.raise_for_status()
                 total = int(resp.headers.get("Content-Length", 0))
                 done = 0
-                with paths.TM_ZIP.open("wb") as fh:
+                with partial.open("wb") as fh:
                         for chunk in resp.iter_content(chunk_size=CHUNK):
                                 fh.write(chunk)
+                                digest.update(chunk)
                                 done += len(chunk)
                                 if total and done % (20 * CHUNK) < CHUNK:
                                         logger.info("  %.0f%% (%.0f/%.0f MB)", 100 * done / total, done / 1e6, total / 1e6)
+
+        if config.TM_ZIP_MD5 and digest.hexdigest() != config.TM_ZIP_MD5:
+                partial.unlink()
+                raise SystemExit(
+                        f"The downloaded archive (md5 {digest.hexdigest()}) is not the one this "
+                        f"project was built from ({config.TM_ZIP_MD5}): transfermarkt-datasets has "
+                        "published new data. Your existing files are untouched. To adopt the new "
+                        "data on purpose, set config.TM_ZIP_MD5 to the new md5 and update "
+                        "fetch_tm_contracts.CURRENT_OBSERVED_ON, then rerun every stage with --force."
+                )
+        partial.replace(paths.TM_ZIP)
         logger.info("Saved %s (%.0f MB)", paths.TM_ZIP, paths.TM_ZIP.stat().st_size / 1e6)
 
 
@@ -149,6 +170,12 @@ def run(force: bool = False) -> None:
                 return
 
         download_zip(force=force)
+        # Tables merge and fetch_tm_contracts derive from the archive and cache
+        # on first use; drop them so they are rebuilt from this one.
+        for derived in (paths.TM_CLUB_SEASONS, paths.TM_TRANSFERS):
+                if derived.exists():
+                        derived.unlink()
+                        logger.info("Removed %s; it is rebuilt from the new archive.", derived.name)
         tables = extract_tables()
 
         players = build_players(tables["players"])

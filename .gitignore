@@ -14,8 +14,15 @@ venv/
 # stay out of git.
 data/raw/*
 !data/raw/.gitkeep
-data/interim/*
-!data/interim/.gitkeep
+
+# Interim tables ARE committed (~8 MB). Several can no longer be rebuilt from
+# their sources: FBref dropped its advanced stats and the live fetch needs a
+# driver that Windows application control can block; the raw contract
+# snapshots are garbage-collected upstream; and the Transfermarkt archive URL
+# always serves the latest release. With these in git, a fresh clone runs
+# every stage from `merge` onward offline. Keep each file small.
+!data/interim/
+!data/interim/*.parquet
 
 # Processed artefacts ARE committed - the deployed app reads them directly and
 # Streamlit Community Cloud has no way to run the pipeline. Keep them small.

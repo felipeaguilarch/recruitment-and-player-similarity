@@ -340,6 +340,16 @@ already exists, so a re-run after a crash resumes rather than restarting:
 python run_pipeline.py --stage all
 ```
 
+The intermediate tables in `data/interim/` are committed, so on a fresh clone
+the four fetch stages find their outputs and skip, and everything from `merge`
+onward rebuilds offline in about eight minutes - byte for byte the files in
+`data/processed/`. That matters because not every source can be fetched again:
+FBref no longer publishes the advanced stats, the raw contract snapshots are
+being garbage-collected upstream, and the Transfermarkt archive is pinned by
+md5 (`TM_ZIP_MD5` in `config.py`), so a newer release is refused rather than
+silently changing every number. Pass `--force` to a fetch stage only to rebuild
+from source on purpose.
+
 ```bash
 streamlit run app.py
 ```
@@ -352,7 +362,7 @@ streamlit run app.py
 | `fetch-fbref-archive` | 2–5 min | Pinned Wayback Machine copies, ~2s apart. Cached under `data/raw/fbref_archive`. |
 | `fetch-transfermarkt` | 3–10 min | One ~241 MB download |
 | `fetch-tm-contracts` | < 1 min | Seven pinned scrape files (~15 MB). Cached under `data/raw/transfermarkt/contracts`. |
-| `merge` | 1–3 min | The fuzzy name join dominates |
+| `merge` | 5–7 min | The fuzzy name join and the club check dominate |
 | `features` | < 1 min | Per-90, possession-adjust, percentile-rank |
 | `similarity` | 1–2 min | PCA + cosine kNN per group; UMAP is the slow part |
 | `value` | 1–3 min | Cross-validation across two candidate models |
@@ -411,7 +421,7 @@ key that parses to the wrong year) before you spend an hour on a pipeline run.
 │   └── figures.py              Stage 6: matplotlib figures for this README
 ├── data/
 │   ├── raw/                    gitignored - reproducible downloads
-│   ├── interim/                gitignored
+│   ├── interim/                COMMITTED - sources that cannot be refetched
 │   ├── processed/              COMMITTED - the deployed app reads these
 │   ├── fbref_archive_snapshots.csv  Pinned Wayback captures
 │   ├── tm_contract_snapshots.csv    Pinned contract snapshots
