@@ -665,6 +665,28 @@ def overlay(live: pd.DataFrame, archived: pd.DataFrame) -> pd.DataFrame:
         return combined[list(live.columns) + extra]
 
 
+def fill_gaps(table: pd.DataFrame, extra: pd.DataFrame) -> pd.DataFrame:
+        """Fill only the empty cells of `table` from `extra` (see fetch_kaggle).
+
+        Unlike overlay(), nothing already present is overwritten: the live
+        table and the archive stay authoritative, and the Kaggle copy only
+        supplies what neither has.
+        """
+        aligned = extra.reindex(table.index)
+        out = table.copy()
+        filled = 0
+        for column in aligned.columns:
+                if column in out.columns:
+                        before = out[column].isna()
+                        out[column] = out[column].where(~before, aligned[column])
+                        filled += int((before & aligned[column].notna()).sum())
+                else:
+                        out[column] = aligned[column]
+                        filled += int(aligned[column].notna().sum())
+        logger.info("Filled %s empty cells from %s", filled, paths.FBREF_KAGGLE.name)
+        return out
+
+
 def coverage_report(table: pd.DataFrame) -> pd.DataFrame:
         """Share of player-seasons with each sentinel stat, per league-season."""
         present = [s for s in SENTINELS.values() if s in table.columns]
@@ -685,6 +707,8 @@ def load_player_table() -> pd.DataFrame:
                 )
                 return live
         combined = overlay(live, pd.read_parquet(paths.FBREF_ARCHIVE))
+        if paths.FBREF_KAGGLE.exists():
+                combined = fill_gaps(combined, pd.read_parquet(paths.FBREF_KAGGLE))
         if config.REQUIRE_ADVANCED_STATS:
                 combined = keep_complete_rows(combined)
         return combined

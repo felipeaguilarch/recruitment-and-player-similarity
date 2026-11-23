@@ -64,8 +64,8 @@ def radar(percentiles: pd.Series,feature_names: list[str],name: str,
         polygon repeats its first point at the end, or it would leave a gap
         between the last axis and the first.
 
-        The primary player is a solid line over a filled area. The comparison
-        is a dotted outline with no fill, so the two never look alike and the
+        Both players are solid lines. The primary player is green over a
+        filled area; the comparison is an orange outline with no fill, so the
         primary reads first. Hovering shows "<axis>: 88th percentile".
 
         Returns an empty figure titled "No percentile profile available" if
@@ -107,14 +107,14 @@ def radar(percentiles: pd.Series,feature_names: list[str],name: str,
                 if paired:
                         comp_labels = [item[0] for item in paired] + [paired[0][0]]
                         comp_values = [float(item[1]) for item in paired] + [float(paired[0][1])]
-                        # Dotted outline, no fill: it must never be mistaken for
-                        # the primary player's solid, filled shape.
+                        # Solid like the primary, but a different colour and no
+                        # fill, so the primary player's filled shape reads first.
                         fig.add_trace(go.Scatterpolar(
                                 r=comp_values,
                                 theta=comp_labels,
                                 mode="lines+markers",
                                 fill="none",
-                                line=dict(color=COMPARISON, width=2.5, dash="dot"),
+                                line=dict(color=COMPARISON, width=2.5),
                                 marker=dict(color=COMPARISON, size=5),
                                 name=comparison_name or "Comparison",
                                 text=[ordinal(value) for value in comp_values],

@@ -12,6 +12,7 @@ a stage you have deliberately changed.
 Cold-start cost, roughly:
     fetch-fbref          60-120 min   rate-limited to ~1 request / 3 s
     fetch-fbref-archive  5-10 min     archived pages, ~2 s apart
+    fetch-kaggle         < 1 min      2024-25 gaps from a hand-downloaded Kaggle CSV
     fetch-transfermarkt  3-10 min     one ~241 MB download
     fetch-tm-contracts   1-2 min      seven ~1-5 MB snapshots
     merge                5-7 min      the fuzzy name join and club check dominate
@@ -36,6 +37,7 @@ import time
 STAGES: list[tuple[str, str]] = [
         ("fetch-fbref", "Download FBref player and team season stats"),
         ("fetch-fbref-archive", "Recover FBref advanced stats from the Wayback Machine"),
+        ("fetch-kaggle", "Fill the archive's 2024-25 gaps from a Kaggle copy of FBref"),
         ("fetch-transfermarkt", "Download transfermarkt-datasets market values"),
         ("fetch-tm-contracts", "Dated contract observations from the raw TM scrapes"),
         ("merge", "Join the two sources into one player-season table"),
@@ -54,6 +56,9 @@ def run_stage(name: str, force: bool) -> None:
         elif name == "fetch-fbref-archive":
                 from src import fetch_fbref_archive
                 fetch_fbref_archive.run(force=force)
+        elif name == "fetch-kaggle":
+                from src import fetch_kaggle
+                fetch_kaggle.run(force=force)
         elif name == "fetch-transfermarkt":
                 from src import fetch_transfermarkt
                 fetch_transfermarkt.run(force=force)

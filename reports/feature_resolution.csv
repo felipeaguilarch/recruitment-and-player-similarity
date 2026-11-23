@@ -68,6 +68,9 @@ blocks,ok,defense__blocks__blocks,^defense__blocks__blocks$,^defense__blocks__bl
 shots_blocked,ok,defense__blocks__sh,^defense__blocks__sh$,^defense__blocks__sh$,True,True
 passes_blocked_def,ok,defense__blocks__pass,^defense__blocks__pass$,^defense__blocks__pass$,True,True
 clearances,ok,defense__flat__clr,^defense__flat__clr$,^defense__flat__clr$,True,True
+ball_recoveries,ok,misc__performance__recov,^misc__performance__recov$,^misc__performance__recov$,True,False
+aerials_won,ok,misc__aerial_duels__won,^misc__aerial_duels__won$,^misc__aerial_duels__won$,True,False
+aerial_win_pct,ok,misc__aerial_duels__won_pct,^misc__aerial_duels__won_pct$,^misc__aerial_duels__won_pct$,False,False
 errors,ok,defense__flat__err,^defense__flat__err$,^defense__flat__err$,True,False
 fouls,ok,misc__performance__fls,^misc__performance__fls$,^misc__performance__fls$,True,False
 fouls_drawn,ok,misc__performance__fld,^misc__performance__fld$,^misc__performance__fld$,True,False

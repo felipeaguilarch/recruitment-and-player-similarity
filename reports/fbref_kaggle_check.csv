@@ -1,0 +1,24 @@
+league,season,column,compared,agree_share
+ENG-Premier League,2425,defense__flat__int,574,1.0
+ESP-La Liga,2425,defense__flat__int,600,1.0
+FRA-Ligue 1,2425,defense__flat__int,553,1.0
+GER-Bundesliga,2425,defense__flat__int,491,1.0
+ITA-Serie A,2425,defense__flat__int,634,1.0
+ENG-Premier League,2425,defense__tackles__tklw,574,1.0
+ESP-La Liga,2425,defense__tackles__tklw,600,1.0
+FRA-Ligue 1,2425,defense__tackles__tklw,553,1.0
+GER-Bundesliga,2425,defense__tackles__tklw,491,1.0
+ITA-Serie A,2425,defense__tackles__tklw,634,1.0
+ENG-Premier League,2425,defense__flat__clr,574,1.0
+ESP-La Liga,2425,defense__flat__clr,600,1.0
+FRA-Ligue 1,2425,defense__flat__clr,553,1.0
+GER-Bundesliga,2425,defense__flat__clr,491,1.0
+ITA-Serie A,2425,defense__flat__clr,634,1.0
+ENG-Premier League,2425,misc__aerial_duels__won,574,1.0
+GER-Bundesliga,2425,misc__aerial_duels__won,491,1.0
+ENG-Premier League,2425,misc__aerial_duels__lost,574,1.0
+GER-Bundesliga,2425,misc__aerial_duels__lost,491,1.0
+ENG-Premier League,2425,misc__aerial_duels__won_pct,532,1.0
+GER-Bundesliga,2425,misc__aerial_duels__won_pct,462,1.0
+ENG-Premier League,2425,misc__performance__recov,574,1.0
+GER-Bundesliga,2425,misc__performance__recov,491,1.0

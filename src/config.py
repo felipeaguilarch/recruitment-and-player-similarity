@@ -163,9 +163,10 @@ FEATURES: dict[str, Feature] = {f.name: f for f in [
         # (`possession__receiving__rec` vs `possession__flat__rec`), so
         # patterns list the archive name first.
         #
-        # Not recoverable: aerial duels and ball recoveries live on the
-        # miscellaneous page, which the archive holds for only two leagues
-        # in 2024-25, so no position group uses them.
+        # Aerial duels and ball recoveries live on the miscellaneous page,
+        # which the archive holds for only two leagues in 2024-25. The other
+        # three are filled from a Kaggle copy of FBref (src/fetch_kaggle.py),
+        # checked value-for-value against the archive first.
         # ---------------------------------------------------------------
 
         # --- volume / output ---
@@ -252,6 +253,12 @@ FEATURES: dict[str, Feature] = {f.name: f for f in [
         _f("shots_blocked", r"^defense__blocks__sh$", padj=True, label="Shots Blocked"),
         _f("passes_blocked_def", r"^defense__blocks__pass$", padj=True, label="Passes Blocked (def)"),
         _f("clearances", r"^defense__flat__clr$", padj=True, label="Clearances"),
+        _f("ball_recoveries", r"^misc__performance__recov$", label="Ball Recoveries"),
+
+        # --- aerial duels (not possession-adjusted: a header is contested
+        # whoever has the ball) ---
+        _f("aerials_won", r"^misc__aerial_duels__won$", label="Aerials Won"),
+        _f("aerial_win_pct", r"^misc__aerial_duels__won_pct$", per90=False, label="Aerial Win %"),
         _f("errors", r"^defense__flat__err$", label="Errors"),
 
         # --- discipline ---
@@ -276,69 +283,67 @@ class GroupSpec:
                 return self.radar or self.features[:9]
 
 
+# Radars were chosen by hand (2026-11-23). Each group's similarity list holds
+# its radar plus the stats that separate styles without being worth a spoke.
+# "Bad" stats (fouls, errors, miscontrols) stay off radars, where a 90th
+# percentile would read as a strength, but may sit in similarity lists.
 GROUP_SPECS: dict[str, GroupSpec] = {
         "CB": GroupSpec("CB", features=[
-                "tackles_won", "interceptions", "blocks",
-                "clearances", "tackles_def_third",
-                "dribblers_tackled_pct", "prog_passes",
-                "prog_carries", "pass_completion_pct",
-                "pass_completion_long_pct",
-                "passes_into_final_third", "passes_attempted",
-                "errors", "fouls", "shots_blocked",
-                "challenges_attempted", "prog_pass_distance",
+                "aerials_won", "aerial_win_pct", "clearances",
+                "blocks", "shots_blocked", "interceptions",
+                "tackles_won", "tackles_def_third",
+                "dribblers_tackled_pct", "ball_recoveries",
+                "prog_passes", "prog_carries", "pass_completion_pct",
+                "pass_completion_long_pct", "passes_attempted",
+                "errors",
         ], radar=[
                 "tackles_won", "interceptions", "clearances",
-                "blocks", "prog_passes", "prog_carries",
-                "pass_completion_pct", "dribblers_tackled_pct",
-                "passes_into_final_third",
+                "blocks", "aerial_win_pct", "prog_passes",
+                "prog_carries", "pass_completion_pct",
+                "dribblers_tackled_pct",
         ]),
         "FB": GroupSpec("FB", features=[
-                "crosses_into_box", "crosses", "prog_carries",
-                "prog_carry_distance", "touches_att_third",
-                "key_passes", "xa", "passes_into_box",
+                "crosses_into_box", "crosses", "key_passes", "xa",
+                "passes_into_box", "prog_carries",
+                "prog_carry_distance", "carries_into_final_third",
+                "take_ons_attempted", "take_on_success_pct",
+                "touches_att_third", "prog_passes_received",
                 "tackles_plus_interceptions",
                 "dribblers_tackled_pct", "pass_completion_pct",
-                "prog_passes_received", "take_ons_attempted",
-                "carries_into_final_third", "miscontrols",
-                "take_on_success_pct",
+                "ball_recoveries",
         ], radar=[
-                "crosses_into_box", "xa", "key_passes",
-                "prog_carries", "touches_att_third",
-                "take_ons_attempted",
-                "tackles_plus_interceptions",
-                "dribblers_tackled_pct", "pass_completion_pct",
+                "crosses", "tackles_plus_interceptions",
+                "prog_carries", "pass_completion_pct", "xa",
+                "take_on_success_pct", "key_passes",
+                "touches_att_third",
         ]),
         "DM": GroupSpec("DM", features=[
-                "tackles_plus_interceptions",
-                "tackles_def_third", "passes_attempted",
-                "pass_completion_pct", "prog_passes",
-                "prog_pass_distance", "switches",
-                "touches_mid_third", "fouls", "blocks",
-                "interceptions", "errors",
-                "passes_into_final_third", "challenges_lost",
-                "tackles_mid_third", "clearances",
-        ], radar=[
                 "tackles_plus_interceptions", "interceptions",
-                "passes_attempted", "pass_completion_pct",
-                "prog_passes", "prog_pass_distance", "fouls",
-                "tackles_def_third", "switches",
+                "ball_recoveries", "tackles_def_third",
+                "tackles_mid_third", "aerials_won", "aerial_win_pct",
+                "blocks", "clearances", "passes_attempted",
+                "pass_completion_pct", "prog_passes",
+                "prog_pass_distance", "prog_carries", "switches",
+                "touches_mid_third", "fouls", "challenges_lost",
+        ], radar=[
+                "aerial_win_pct", "tackles_plus_interceptions",
+                "ball_recoveries", "prog_passes",
+                "pass_completion_pct", "prog_carries", "switches",
+                "passes_attempted",
         ]),
         "CM": GroupSpec("CM", features=[
                 "prog_passes", "passes_into_final_third",
                 "passes_into_box", "sca", "xa", "key_passes",
                 "prog_carries", "prog_carry_distance",
-                "take_ons_succeeded",
-                "tackles_plus_interceptions",
-                "touches_mid_third", "touches_att_third",
-                "pass_completion_pct", "passes_attempted",
-                "carries_into_final_third",
-                "prog_pass_distance",
+                "take_ons_succeeded", "tackles_plus_interceptions",
+                "ball_recoveries", "touches_mid_third",
+                "touches_att_third", "pass_completion_pct",
+                "passes_attempted", "carries_into_final_third",
         ], radar=[
-                "prog_passes", "passes_into_final_third",
-                "sca", "xa", "prog_carries",
-                "take_ons_succeeded",
-                "tackles_plus_interceptions",
-                "pass_completion_pct", "key_passes",
+                "prog_passes", "passes_into_final_third", "sca",
+                "xa", "prog_carries", "take_ons_succeeded",
+                "tackles_plus_interceptions", "ball_recoveries",
+                "pass_completion_pct",
         ]),
         "AM": GroupSpec("AM", features=[
                 "xa", "key_passes", "sca", "gca",
@@ -346,12 +351,12 @@ GROUP_SPECS: dict[str, GroupSpec] = {
                 "take_ons_attempted", "take_ons_succeeded",
                 "touches_att_box", "npxg", "shots",
                 "prog_passes_received", "carries_into_box",
-                "miscontrols", "fouls_drawn", "prog_carries",
+                "prog_carries", "prog_passes", "fouls_drawn",
+                "tackles_att_third",
         ], radar=[
                 "npxg", "xa", "sca", "key_passes",
                 "passes_into_box", "take_ons_succeeded",
-                "touches_att_box", "prog_carries",
-                "fouls_drawn",
+                "touches_att_box", "prog_carries", "prog_passes",
         ]),
         "W": GroupSpec("W", features=[
                 "npxg", "xa", "shots", "take_ons_attempted",
@@ -368,16 +373,16 @@ GROUP_SPECS: dict[str, GroupSpec] = {
         ]),
         "ST": GroupSpec("ST", features=[
                 "npxg", "npxg_per_shot", "shots",
-                "shots_on_target_pct", "goals_minus_xg",
+                "shots_on_target", "shots_on_target_pct",
+                "goals_minus_xg", "non_pen_goals",
                 "touches_att_box", "xa", "sca",
                 "prog_passes_received", "fouls_drawn",
-                "miscontrols", "shot_distance",
-                "take_ons_attempted", "shots_on_target",
-                "goals_per_shot", "non_pen_goals",
+                "aerials_won", "aerial_win_pct", "offsides",
+                "shot_distance",
         ], radar=[
                 "npxg", "npxg_per_shot", "shots",
-                "touches_att_box", "xa", "sca", "fouls_drawn",
-                "shots_on_target_pct", "goals_per_shot",
+                "touches_att_box", "aerial_win_pct", "xa", "sca",
+                "shot_distance", "shots_on_target_pct",
         ]),
 }
 

@@ -106,6 +106,7 @@ you refit. The app labels the map as a picture, not as the model.
 | --- | --- | --- |
 | [FBref](https://fbref.com) | [`soccerdata`](https://soccerdata.readthedocs.io/) | Player list, basic stats, team possession |
 | FBref, archived | [Wayback Machine](https://web.archive.org/) copies | The advanced stats FBref no longer serves |
+| FBref, Kaggle copy | [Football Players Stats (2024-2025)](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2024-2025) | 2024-25 aerial duels and ball recoveries the archive lacks |
 | [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) | direct CSV download | Market values, `sub_position`, transfers |
 | transfermarkt-datasets, raw scrapes | its public DVC store | Contract end dates as they stood during each season |
 
@@ -159,6 +160,17 @@ enters the model only if it has every advanced stat page
 (`REQUIRE_ADVANCED_STATS` in `config.py`) - filling whole missing pages with
 medians would invent profiles. Coverage per league and season is in
 `reports/fbref_archive_coverage.csv`.
+
+The archive's miscellaneous page - aerial duels and ball recoveries - survives
+for only the Premier League and Bundesliga in 2024-25. The other three leagues
+come from a [Kaggle copy of FBref](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2024-2025)
+scraped before the removal ([`src/fetch_kaggle.py`](src/fetch_kaggle.py)). It
+only fills empty cells, and is used only after a value-for-value check against
+the archive: interceptions, tackles won and clearances in all five leagues,
+and the aerial and recovery columns where both have them, agree on 100% of
+2,852 player-seasons (`reports/fbref_kaggle_check.csv`). The Kaggle file is a
+manual download; its output is committed, so the pipeline still runs on a
+fresh clone without it.
 
 2022-23 comes from the archive alone. The live fetch drives a real Chrome
 through `soccerdata`, whose driver Windows application control can block, and
@@ -302,8 +314,9 @@ Stated here rather than waiting for someone else to point them out.
 - **Advanced stats come from archived pages.** FBref stopped publishing them in
   January 2026, and the archived copies cover 2022-23 and 2024-25 fully but
   2023-24 only for the Premier League. 2025-26 has no advanced stats at all, so
-  it is not in the model. Aerial duels and ball recoveries are archived for
-  2022-23 but only two leagues in 2024-25, and are not used.
+  it is not in the model. Aerial duels and ball recoveries for La Liga,
+  Ligue 1 and Serie A 2024-25 come from a Kaggle copy rather than the
+  archive, checked against it first.
 - **Seasons are not evenly spaced.** With 2023-24 thin outside England, most
   players' two seasons are two years apart, which makes them look less alike
   than adjacent seasons would - read the self-consistency numbers by gap.
@@ -360,6 +373,7 @@ streamlit run app.py
 | --- | --- | --- |
 | `fetch-fbref` | 60–120 min | Rate-limited to ~1 request / 3s. Cached under `~/soccerdata`. |
 | `fetch-fbref-archive` | 2–5 min | Pinned Wayback Machine copies, ~2s apart. Cached under `data/raw/fbref_archive`. |
+| `fetch-kaggle` | < 1 min | Reads the hand-downloaded Kaggle CSV from `data/raw/kaggle/2425/`; skips with a warning if absent. |
 | `fetch-transfermarkt` | 3–10 min | One ~241 MB download |
 | `fetch-tm-contracts` | < 1 min | Seven pinned scrape files (~15 MB). Cached under `data/raw/transfermarkt/contracts`. |
 | `merge` | 5–7 min | The fuzzy name join and the club check dominate |
@@ -410,6 +424,7 @@ key that parses to the wrong year) before you spend an hour on a pipeline run.
 │   ├── fbref_extra.py          Widened FBref reader (passing/defense/possession)
 │   ├── fetch_fbref.py          Stage 1a
 │   ├── fetch_fbref_archive.py  Stage 1a: advanced stats from the Wayback Machine
+│   ├── fetch_kaggle.py         Stage 1d: 2024-25 gaps from a checked Kaggle copy
 │   ├── fetch_transfermarkt.py  Stage 1b
 │   ├── fetch_tm_contracts.py   Stage 1c: contract length as it stood each season
 │   ├── name_matching.py        Normalise -> block -> fuzzy -> manual override

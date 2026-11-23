@@ -17,7 +17,7 @@ soccerdata>=1.9.0        # FBref season stats (see src/fbref_extra.py)
 rapidfuzz>=3.9           # FBref <-> Transfermarkt name matching
 requests>=2.31
 
-streamlit>=1.37
+streamlit>=1.67         # app.py uses width="stretch" (use_container_width is deprecated)
 plotly>=5.22
 
 matplotlib>=3.8          # static figures for the README

@@ -38,3 +38,7 @@ soccerdata/
 Thumbs.db
 .vscode/
 .idea/
+
+# --- Secrets ---
+# API keys live here (API_FOOTBALL_KEY). Never commit it.
+.env
