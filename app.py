@@ -28,24 +28,18 @@ EUR = "€"
 
 
 # ---------------------------------------------------------------------------
-# Loading - done for you
+# Loading
 # ---------------------------------------------------------------------------
 
 
 @st.cache_data(show_spinner="Loading player data…")
 def load_table(path_str: str) -> pd.DataFrame:
-        """st.cache_data returns a COPY per session - correct for data frames,
-        because a user mutating one must not affect anybody else."""
+        """Read one committed parquet table, cached across reruns.
+
+        st.cache_data hands each session its own copy, so one viewer's
+        filtering can never change what another sees.
+        """
         return pd.read_parquet(path_str)
-
-
-@st.cache_resource(show_spinner="Loading models…")
-def load_models(path_str: str):
-        """st.cache_resource shares ONE object across all sessions - correct for
-        a fitted model, which is read-only and expensive to unpickle."""
-        import joblib
-
-        return joblib.load(path_str)
 
 
 def require_pipeline() -> None:
@@ -359,7 +353,13 @@ comp_details = pool[["player_season_id", "player", "team", "season", "market_val
 comp_details["comp_player_season_id"] = comp_details["comp_player_season_id"].astype(str)
 target_comps["comp_player_season_id"] = target_comps["comp_player_season_id"].astype(str)
 target_comps = target_comps.merge(comp_details, on="comp_player_season_id", how="left")
-target_comps = target_comps.sort_values("rank").reset_index(drop=True)
+# The pipeline stores a deep neighbour list (config.N_NEIGHBOURS) so that tight
+# filters still leave candidates; show only the closest that survive them.
+target_comps = (
+        target_comps.sort_values("rank")
+        .head(config.APP_COMPARABLES_SHOWN)
+        .reset_index(drop=True)
+)
 
 comparison_id = None
 comparison_row = None

@@ -70,6 +70,7 @@ CURRENT_OBSERVED_ON = "2026-07-06"
 
 # --- download ----------------------------------------------------------------
 
+
 def raw_path(name: str):
         return paths.TM_CONTRACTS_DIR / f"{name}.json.gz"
 
@@ -94,6 +95,7 @@ def download(row: dict, session: requests.Session) -> None:
 
 
 # --- parsing -----------------------------------------------------------------
+
 
 def parse_tm_date(values: pd.Series) -> pd.Series:
         """Transfermarkt dates in either of the two formats the scrapes use.
@@ -167,6 +169,7 @@ def load_transfers() -> pd.DataFrame:
 
 # --- choosing an observation -------------------------------------------------
 
+
 def contract_at_midpoint(
         rows: pd.DataFrame, observations: pd.DataFrame, transfers: pd.DataFrame
 ) -> pd.DataFrame:
@@ -213,6 +216,7 @@ def contract_at_midpoint(
 
 
 # --- the stage ---------------------------------------------------------------
+
 
 def build_observations() -> pd.DataFrame:
         """Every dated contract observation: the pinned snapshots plus players.csv."""

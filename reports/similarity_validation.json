@@ -1,4 +1,23 @@
 {
-  "median_rank": 7.0,
-  "top_5_share": 0.4419953596287703
+  "median_rank": 49.0,
+  "top_5_share": 0.16585581601061478,
+  "median_rank_pct": 0.09048178613396005,
+  "top_5pct_share": 0.39451570101724903,
+  "player_seasons_scored": 2261,
+  "by_season_gap": {
+    "1": {
+      "median_rank": 19.0,
+      "top_5_share": 0.28987993138936535,
+      "median_rank_pct": 0.0333889816360601,
+      "top_5pct_share": 0.5883361921097771,
+      "player_seasons_scored": 583
+    },
+    "2": {
+      "median_rank": 68.5,
+      "top_5_share": 0.12276519666269368,
+      "median_rank_pct": 0.11834319526627218,
+      "top_5pct_share": 0.32717520858164484,
+      "player_seasons_scored": 1678
+    }
+  }
 }

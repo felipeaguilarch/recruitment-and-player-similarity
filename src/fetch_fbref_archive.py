@@ -48,7 +48,6 @@ import io
 import json
 import logging
 import time
-import urllib.parse
 
 import pandas as pd
 import requests
@@ -134,6 +133,7 @@ BIG5_TEAMS = 96
 
 # --- downloading -------------------------------------------------------------
 
+
 def _session() -> requests.Session:
         session = requests.Session()
         session.headers["User-Agent"] = config.USER_AGENT
@@ -181,6 +181,7 @@ def download(session: requests.Session, row: dict) -> str:
 
 
 # --- parsing -----------------------------------------------------------------
+
 
 def parse_page(text: str, stat_type: str, scope: str, season: str) -> pd.DataFrame:
         """One archived page to a raw soccerdata-style frame (before _concat).
@@ -373,6 +374,7 @@ def align_to_live(flat: pd.DataFrame, live: pd.DataFrame, stat_type: str) -> pd.
 
 # --- discovery ---------------------------------------------------------------
 
+
 def _cdx(session: requests.Session, url: str, start: str, end: str) -> list[str]:
         params = {
                 "url": url, "from": start, "to": end,
@@ -547,6 +549,7 @@ def discover(seasons: list[str] | None = None) -> pd.DataFrame:
 
 
 # --- the stage ---------------------------------------------------------------
+
 
 def fetch_archived_stats() -> pd.DataFrame:
         """Download and parse every pinned capture into one wide table."""

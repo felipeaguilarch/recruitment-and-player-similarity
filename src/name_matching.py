@@ -98,7 +98,6 @@ def season_end_year(season: object) -> int:
         to the wrong year would pick market values twelve months out of date,
         and nothing downstream would flag it - the numbers would just be
         quietly wrong.
-    
         """
 
         digits = re.sub(r"\D", "", str(season))
@@ -109,7 +108,7 @@ def season_end_year(season: object) -> int:
         elif len(digits) == 8:
                 return int(digits[4:])
 
-        else: 
+        else:
                 raise ValueError(f"Invalid season key: {season}")
 
 
@@ -121,7 +120,6 @@ def season_midpoint(season: object) -> pd.Timestamp:
         players who have since got worse.
 
         Returns 1 January of the season's end year.
-    
         """
         return pd.Timestamp(year=season_end_year(season), month=1, day=1)
 
@@ -136,7 +134,6 @@ def load_overrides() -> dict[str, int]:
         Returns {normalised_fbref_name: tm_player_id}, or {} if the file is
         absent. Written by hand from reports/name_match_review.csv, and takes
         precedence over any fuzzy result.
-    
         """
         if not paths.NAME_OVERRIDES.exists():
                 return {}
@@ -179,7 +176,6 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
         fuzzy score. An override naming an id absent from `tm` raises rather
         than falling through to fuzzy matching, so a typo in the CSV cannot
         hide as a plausible-looking match.
-    
         """
         tm = tm.reset_index(drop=True)
         tm_norm = tm["name"].apply(normalise_name)
@@ -190,10 +186,10 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
                         blocks.setdefault(int(birth_year), []).append(position)
 
         overrides = load_overrides()
-        id_to_pos = {player_id: pos for pos, 
+        id_to_pos = {player_id: pos for pos,
                      player_id in enumerate(tm["player_id"])
                      if pd.notna(player_id)}
-        
+
         rows = []
         for player in fbref_players.itertuples(index = False):
                 query = normalise_name(player.player)
@@ -233,7 +229,7 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
 
                 born = int(player.born)
                 candidates = [
-                        position 
+                        position
                         for year in range(
                                 born - config.BIRTH_YEAR_TOLERANCE,
                                 born + config.BIRTH_YEAR_TOLERANCE + 1
@@ -244,7 +240,7 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
                         rows.append(row)
                         continue
 
-                choices = {position: tm_norm[position] 
+                choices = {position: tm_norm[position]
                            for position in candidates
                            if tm_norm[position]}
                 if not choices:
@@ -284,14 +280,14 @@ def match_players(fbref_players: pd.DataFrame, tm: pd.DataFrame) -> pd.DataFrame
                 rows.append(row)
 
         return pd.DataFrame(rows,  columns=[
-                "fbref_player", 
+                "fbref_player",
                 "fbref_player_norm",
                 "fbref_born",
-                "match_score", 
+                "match_score",
                 "decision",
-                "tm_player_id", 
-                "tm_name", 
-                "tm_birth_year", 
+                "tm_player_id",
+                "tm_name",
+                "tm_birth_year",
                 "tm_sub_position"])
 
 
@@ -309,7 +305,6 @@ def write_reports(matches: pd.DataFrame) -> dict:
         "94% of qualifying player-seasons matched to a market value" tells a
         reader the work was done honestly, and a low rate means the players
         worth writing about may simply be absent.
-    
         """
         paths.ensure_dirs()
 
@@ -324,7 +319,7 @@ def write_reports(matches: pd.DataFrame) -> dict:
                 "total": total,
                 "matched": matched,
                 "match_rate": match_rate,
-                "decisions": {str(decision): int(count) 
+                "decisions": {str(decision): int(count)
                               for decision, count in matches["decision"].value_counts().items()},
                 "thresholds": {
                         "accept": config.NAME_MATCH_ACCEPT,

@@ -1,100 +1,93 @@
 # Player Recruitment & Similarity Tool
 
-Find comparable players across five European leagues, and flag the ones the
-market prices below their profile.
+Find players who play like the one you are losing, across Europe's five big
+leagues, and see which of them the market prices below their profile.
 
-**🔗 Live app:** _(deploy to Streamlit Community Cloud and paste the link here — this is the first thing anyone will click)_
+**Live app:** _link added after deployment to Streamlit Community Cloud_
 
-<!-- Once you have run `python run_pipeline.py --stage figures`, assets/radar_example.png exists. -->
-![Percentile radar for a player profile](assets/radar_example.png)
+<!-- Figure: assets/radar_example.png - the percentile radar, built by src/figures.py -->
 
----
+| | |
+| --- | --- |
+| **Comparables** | Cosine nearest neighbours on PCA style scores, within position group |
+| **Style profile** | Percentile radar against the same position group and season |
+| **Value flag** | Out-of-fold residual from an expected-market-value model |
+| **Filters** | Position, season, candidate seasons, leagues, age, budget range, minutes |
+| **Data** | 3,768 player-seasons: all five leagues in 2022-23 and 2024-25, Premier League 2023-24 |
 
-> **⚠️ This README is scaffolded, not finished.** Every number below is a
-> placeholder. The validation notebook produces the real ones — fill them in as
-> you go, and delete this block when nothing marked `TODO` is left.
+### Headline results
 
----
-
-## Building it (delete this section when you're done)
-
-The plumbing is written. The modelling and the product are not — those modules
-are signatures, docstrings and numbered `TODO`s, and the test suite is the spec.
-
-```bash
-pytest -q          # 17 pass (config + plumbing), 30 are waiting for you
-```
-
-Every failure names the exact function to write. Work in this order, because
-each stage feeds the next:
-
-| # | Module | What you're building | Tests it turns green |
-| --- | --- | --- | --- |
-| 1 | `src/name_matching.py` | Normalise → block → fuzzy → override | `test_smoke.py -k "normalise or season"` |
-| 2 | `src/features.py` | Per-90, possession adjustment, percentiles | `-k "possession or resolve"`, then the synthetic feature tests |
-| 3 | `src/similarity.py` | PCA component choice, cosine kNN | the similarity block in `test_pipeline_synthetic.py` |
-| 4 | `src/value_model.py` | Log target, GroupKFold, OOF residuals | the value block |
-| 5 | `src/radar.py` + `app.py` | The product layer | none — judge it by eye |
-| 6 | `src/figures.py` | README figures | `test_every_readme_figure_renders` |
-
-Two things to know about the test suite:
-
-- **`tests/test_pipeline_synthetic.py` runs the whole chain on generated data,
-  no network.** You do not need the 2-hour FBref scrape to find out whether your
-  PCA and kNN agree on their index. Run it constantly.
-- **The index-alignment tests are the valuable ones.**
-  `test_comparables_stay_inside_their_position_group` and
-  `test_neighbours_exclude_self_and_rank_from_one` catch the classic bug here:
-  `kneighbors` returns positional indices into the matrix you fitted, not player
-  ids, and conflating the two produces comps that look plausible and are wrong.
-
-`streamlit run app.py` works from the start — the page renders a skeleton with
-each unbuilt section marked, so you can fill them in one at a time.
+- A player's own **next season ranks in the top 3.3% of his position group**
+  (median rank 19th) - a random model would put it in the middle, at 50%.
+- Players flagged **undervalued in 2022-23 were worth 1.06x their value two
+  years later**, against 0.60x for the rest, and the gap holds inside every
+  age band.
+- Expected market value is predicted to a **median error of 45%**, on
+  cross-validation grouped by player.
 
 ---
 
-## The brief
+## Case study: replacing a left-back
 
 > _A mid-table Premier League side has lost its first-choice left-back. They
 > need a replacement under 23, a budget of €8m, and the same profile: high
 > volume overlapping runs, crossing from the byline rather than inverting into
 > midfield._
 
-**TODO — this case study is the centrepiece of the project.** Work the brief
-with your own tool and write it up here, with screenshots:
+The template is **Antonee Robinson** (Fulham, 2024-25), an overlapping
+left-back at a mid-table club: 86th percentile for crosses, 94th for
+progressive carries and for tackles plus interceptions, 86th for touches in
+the attacking third.
 
-1. The filter state you set, and why those filters and not others.
-2. The comparables the model returned.
-3. **The ones you discarded, and why.** This is the part that matters. Anyone
-   can screenshot a top-five list; explaining that the second-ranked option is
-   wrong — wrong foot, contract to 2030, profile match driven by a stat that
-   flatters him in a low block — is what shows you understand both football and
-   your own model's limits.
-4. What you would actually send to a scout.
+**Filters:** position FB · candidate seasons 2024-25 · budget €0-8m · age 23
+or under · 900+ minutes. Ranks are among all 676 full-back seasons, as the
+app shows them.
 
----
+| Rank | Player | Club | Age | Foot | Value | Model | Contract | Similarity |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 170 | Álex Jiménez | Milan | 19 | right | €5.0m | €6.1m | 3.5 yrs | 0.43 |
+| 188 | Nathaniel Brown | Frankfurt | 21 | left | €8.0m | €15.5m | 5.5 yrs | 0.38 |
 
-## What it does
+The first finding is negative, and worth stating: **nobody in that pool is
+close to Robinson.** The best similarity is 0.43, where his true peers sit
+above 0.9. Under-23 full-backs on €8m rarely carry, tackle and cross at his
+volume at the same time. Two candidates survive the filters, and one is
+discarded straight away:
 
-| | |
-| --- | --- |
-| **Comparables** | Cosine nearest-neighbours on PCA style scores, within position group |
-| **Style profile** | Percentile radar against players in the same group and season |
-| **Value flag** | Residual from an expected-market-value model, as a multiple |
-| **Filters** | Position group, season, league, age range, budget ceiling, minimum minutes |
+- **Álex Jiménez - discarded.** Right-footed, and his profile is carrying
+  (97th percentile) rather than crossing (54th). He would invert, not overlap.
+- **Nathaniel Brown - the one to scout.** Left-footed, five and a half years
+  of contract, and close on the end product that defines the role: crosses
+  82nd percentile, xA 94th, key passes 93rd, tackles plus interceptions 85th.
+  He carries less (64th) and beats his man less often (take-on success 23rd),
+  so he delivers from the byline after the ball reaches him rather than
+  driving it there himself. The model values him at €15.5m against a €8m
+  market value; Transfermarkt had him at €22m by July 2025.
 
-### Two decisions worth defending
+**What goes to the scout** _(draft - rewrite in your own words)_: one name,
+Brown, with three questions the data cannot answer - can he sustain
+Robinson's defensive work rate in a back four rather than Frankfurt's
+system, is the low take-on rate a role choice or a ceiling, and is a
+five-year contract a fee Frankfurt would actually negotiate inside €8m?
 
-**Cosine, not Euclidean.** On standardised PCA scores, cosine distance compares
-the *shape* of a profile and largely ignores its magnitude — which is what
-"plays like him" means. Euclidean blends style with level, so it returns the
-same handful of elite players as comparables for everybody.
+### Hindsight check: the same brief in 2023
 
-**Search in PCA space, plot in UMAP space.** The app's style map is UMAP
-because it produces a far more readable scatter. The neighbour search is never
-run there: UMAP deliberately distorts global distances to preserve local
-structure, so distances between distant points carry no meaning and shift when
-you refit. The app labels the map as a picture, not as the model.
+Running the identical brief on the 2022-23 pool shows what the shortlist was
+worth two seasons later.
+
+| Rank | Player | Club | Foot | Value 2022-23 | Value July 2025 | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| 20 | Issa Kaboré | Marseille | right | €5.0m | €4.0m | Discarded: wrong foot, contract expiring |
+| 32 | Yan Couto | Girona | right | €6.0m | €20.0m | Discarded: wrong foot (a right-back) |
+| 87 | Miguel Gutiérrez | Girona | left | €8.0m | €20.0m | **Shortlist** |
+| 93 | Quentin Merlin | Nantes | left | €7.0m | €15.0m | **Shortlist** |
+| 141 | Hugo Bueno | Wolves | left | €0.2m | €8.0m | Shortlist (flagged undervalued) |
+
+The highest-ranked candidate was the wrong answer for reasons the similarity
+score cannot see - a right-footer in the last year of his contract - and the
+two left-footers below him more than doubled in value. That is the point of
+the tool: it narrows 676 full-backs to a handful worth watching, and the
+judgement on that handful is still a person's.
 
 ---
 
@@ -105,379 +98,342 @@ you refit. The app labels the map as a picture, not as the model.
 | Source | Via | What it gives |
 | --- | --- | --- |
 | [FBref](https://fbref.com) | [`soccerdata`](https://soccerdata.readthedocs.io/) | Player list, basic stats, team possession |
-| FBref, archived | [Wayback Machine](https://web.archive.org/) copies | The advanced stats FBref no longer serves |
+| FBref, archived | [Wayback Machine](https://web.archive.org/) copies | The advanced (Opta) stats FBref no longer serves |
 | FBref, Kaggle copy | [Football Players Stats (2024-2025)](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2024-2025) | 2024-25 aerial duels and ball recoveries the archive lacks |
-| [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) | direct CSV download | Market values, `sub_position`, transfers |
+| [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) | direct download | Market values, sub-positions, transfers, appearances |
 | transfermarkt-datasets, raw scrapes | its public DVC store | Contract end dates as they stood during each season |
 
-No live scraping of Transfermarkt. The project uses dcaribou's already-scraped,
-versioned release, which is both kinder to the site and far more reproducible —
-anyone cloning this repo gets the same bytes.
+Nothing is scraped from Transfermarkt directly: the project uses dcaribou's
+already-scraped, versioned release.
 
-Two Transfermarkt fields justify the detour on their own:
+**FBref lost its advanced stats on 2026-01-20**, when its Opta agreement
+ended. [`src/fetch_fbref_archive.py`](src/fetch_fbref_archive.py) recovers
+them from Wayback Machine copies of the same pages taken before that date,
+each pinned by capture timestamp in
+[`data/fbref_archive_snapshots.csv`](data/fbref_archive_snapshots.csv). The
+archive holds all of 2022-23 and 2024-25 but only the Premier League in
+2023-24, and a player-season enters the model only if it has every advanced
+stat page - filling whole missing pages with medians would invent profiles.
 
-- **`sub_position`** — "Centre-Back", "Left-Back", "Defensive Midfield". FBref's
-  own position column gives only `DF` / `MF` / `FW`, which cannot separate a
-  centre-back from a full-back — exactly the distinction this tool exists to
-  respect.
-- **Contract end date** — contract years remaining is one of the strongest
-  real drivers of transfer price, and is absent from most portfolio versions
-  of this project.
+**Gaps filled from Kaggle, after checking it.** The archive keeps FBref's
+miscellaneous page (aerial duels, ball recoveries) for only two leagues in
+2024-25. The other three come from a Kaggle copy of FBref scraped before the
+removal ([`src/fetch_kaggle.py`](src/fetch_kaggle.py)). It only fills empty
+cells, and is used only because it matched the archive value-for-value on
+every compared column across all 2,852 player-seasons
+(`reports/fbref_kaggle_check.csv`).
 
-The released players table only has each player's *current* contract, which
-is wrong for every past season: anyone who has extended or moved since looks
-as if he had years more left. Measured on this project's data, it put the
-average 2023-24 player at 4.4 years remaining against 2.8 from dated records,
-and moved 45% of rows by more than three months.
-[`src/fetch_tm_contracts.py`](src/fetch_tm_contracts.py) fixes that with the
-dataset's raw scrapes, which sit in a public store as dated files: each one is
-a snapshot of every player's contract on the day it was scraped. Seven of
-them, observed between May 2023 and July 2026, are pinned by checksum in
-[`data/tm_contract_snapshots.csv`](data/tm_contract_snapshots.csv). Each
-player-season takes the snapshot nearest its midpoint, provided the player was
-at the same club in between (checked against the transfers table); otherwise
-the value is left blank rather than guessed. About 77% of player-seasons get
-one. Contracts change within a club spell about 15% of the time per year, so
-with typical gaps of 4-6 months roughly 5-7% of matched values are slightly
-stale - Ødegaard's September 2023 extension, for example, is missed for
-2023-24.
+**Contracts as they stood at the time.** The released Transfermarkt table
+holds only each player's *current* contract, which is wrong for every past
+season - a player who has since extended looks as if he had years more left.
+On this data it put the average 2023-24 player at 4.4 years remaining against
+2.8 from dated records. [`src/fetch_tm_contracts.py`](src/fetch_tm_contracts.py)
+instead reads seven of the dataset's raw scrapes (May 2023 to July 2026), each
+a dated snapshot of every player's contract, and takes the one nearest each
+season's midpoint, provided the player stayed at the same club in between.
+88% of model rows get a dated contract; the rest are left blank rather than
+guessed.
 
-`soccerdata` 1.9.0 only exposes five player-season stat types, which leaves out
-`passing`, `defense`, `possession` and `gca` — between them almost everything
-describing *how* a player plays rather than how much he scores.
-[`src/fbref_extra.py`](src/fbref_extra.py) subclasses the reader to widen it,
-reusing its caching and rate limiting.
+**The name join is checked against where players actually played.**
+Matching on name and birth year alone confuses namesakes - two Adama Traorés,
+two Vitinhas - and fuzzy matching scores "Rodri" 100 against "Rodri Tarín".
+Every match is therefore confirmed against Transfermarkt's appearances: the
+player must have played for that club that season, or the right player is
+found within the squad. 96.0% of players match; the club check corrected 52
+player-seasons (Rodri had been a €1m centre-back), recovered 80 that failed on
+nicknames (Andy/Andrew Robertson), and unlinked 6 it could not confirm. Every
+change is in `reports/name_match_club_check.csv`.
 
-**FBref lost its advanced stats on 2026-01-20**, when its Opta data agreement
-ended: passing, progression, chance creation, defensive actions and xG are now
-blank on the live site. [`src/fetch_fbref_archive.py`](src/fetch_fbref_archive.py)
-recovers them from Wayback Machine copies of the same pages taken before that
-date. Every copy used is pinned by capture timestamp in
-[`data/fbref_archive_snapshots.csv`](data/fbref_archive_snapshots.csv), so the
-download is reproducible byte for byte. The archive holds all of 2022-23 and
-2024-25 but only parts of 2023-24 and none of 2025-26, and a player-season
-enters the model only if it has every advanced stat page
-(`REQUIRE_ADVANCED_STATS` in `config.py`) - filling whole missing pages with
-medians would invent profiles. Coverage per league and season is in
-`reports/fbref_archive_coverage.csv`.
+### Position groups and features
 
-The archive's miscellaneous page - aerial duels and ball recoveries - survives
-for only the Premier League and Bundesliga in 2024-25. The other three leagues
-come from a [Kaggle copy of FBref](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2024-2025)
-scraped before the removal ([`src/fetch_kaggle.py`](src/fetch_kaggle.py)). It
-only fills empty cells, and is used only after a value-for-value check against
-the archive: interceptions, tackles won and clearances in all five leagues,
-and the aerial and recovery columns where both have them, agree on 100% of
-2,852 player-seasons (`reports/fbref_kaggle_check.csv`). The Kaggle file is a
-manual download; its output is committed, so the pipeline still runs on a
-fresh clone without it.
+Seven groups - `CB`, `FB`, `DM`, `CM`, `AM`, `W`, `ST` - from Transfermarkt's
+sub-positions, because FBref's own `DF / MF / FW` cannot tell a centre-back
+from a full-back. Each group has its own 16-18 stats
+([`src/config.py`](src/config.py)), and its radar shows 8-9 of them, chosen by
+hand. Stats where a high number is bad (fouls, errors, miscontrols) can shape
+the comparables but never appear on a radar, where a 90th percentile would
+read as a strength. Goalkeepers are out of scope.
 
-2022-23 comes from the archive alone. The live fetch drives a real Chrome
-through `soccerdata`, whose driver Windows application control can block, and
-the archive has the whole season anyway: its standard page stands in for the
-live player list and its Big 5 squad page for team possession.
+Two adjustments that are easy to skip:
 
-**The name join is checked against where players actually played.** Matching
-FBref to Transfermarkt on name and birth year alone confuses namesakes born a
-year apart - two Adama Traorés, two Vitinhas, Igor Julio and Igor Vekic - and
-`token_set_ratio` scores "Rodri" 100 against "Rodri Tarín". Transfermarkt's
-appearances table records each player's club per season, so every match is
-confirmed only if the Transfermarkt player appeared for that FBref club that
-season; otherwise the right player is looked up within that club's squad.
-This corrected 52 player-seasons (Rodri had been a €1m centre-back) and
-recovered 80 that failed on nickname vs full name (Andy/Andrew Robertson,
-Max/Maximilian Kilman). Every change is listed in
-`reports/name_match_club_check.csv`.
+- **Possession adjustment.** A midfielder whose team has 65% of the ball makes
+  fewer tackles because the ball is not there to win. Defensive per-90s are
+  scaled to a neutral 50%; without it, a "best ball-winner" list is a list of
+  players at bad teams.
+- **Volume and efficiency side by side** - take-ons attempted *and* success
+  rate, aerials won *and* aerial win %. Style lives in the gap between them.
 
-### Position groups
+### Similarity
 
-Seven groups: `CB`, `FB`, `DM`, `CM`, `AM`, `W`, `ST`. Each has its own feature
-set of 12–18 per-90 stats — comparing a striker to a full-back on the same axes
-is the single most common way a tool like this becomes useless.
+Each group's stats are standardised and reduced with PCA, keeping enough
+components for 85% of the variance (5 to 9), and comparables are the nearest
+neighbours by **cosine** distance on those scores.
 
-Goalkeepers are deliberately out of scope. Their stat profile shares almost
-nothing with outfield players and would need its own features, PCA and value
-model.
+- **Cosine, not Euclidean.** Cosine compares the *shape* of a profile and
+  largely ignores its magnitude - which is what "plays like him" means.
+  Euclidean blends style with level, and returns the same few elite players as
+  comparables for everybody.
+- **Search in PCA space, plot in UMAP space.** The app's style map is UMAP,
+  which draws a far more readable picture, but the search never runs there:
+  UMAP distorts global distances, so they carry no meaning.
+- **A deep neighbour list.** 200 neighbours are stored per player, and the
+  app shows the 25 closest that survive its filters. With only 25 stored, a
+  brief like the one above left 95% of players with fewer than five
+  candidates.
 
-### Two adjustments that are easy to skip
+<!-- Figure: assets/style_map.png - one position group's style map, built by src/figures.py -->
 
-- **Possession adjustment.** A midfielder at a team with 65% of the ball makes
-  fewer tackles because the ball is not there to be won. Defensive per-90s are
-  scaled to a neutral 50% baseline. Without this, a "best defensive midfielder"
-  ranking is really a ranking of players at bad teams.
-- **Volume separated from efficiency.** Both an attempt rate and a success rate
-  for dribbling, passing and aerials. Style lives in the gap between them: two
-  wingers with identical completed dribbles per 90 are very different players if
-  one attempts twice as many.
-
-### Style dimensions
-
-**TODO** — read `reports/pca_loadings.csv` (section 3 of the notebook) and name
-the first three components per group in plain football language.
+#### Style dimensions _(draft names - read `reports/pca_loadings.csv` and rename in your own words)_
 
 | Group | PC1 | PC2 | PC3 |
 | --- | --- | --- | --- |
-| CB | _TODO_ | _TODO_ | _TODO_ |
-| FB | _TODO_ | _TODO_ | _TODO_ |
-| DM | _TODO_ | _TODO_ | _TODO_ |
-| CM | _TODO_ | _TODO_ | _TODO_ |
-| AM | _TODO_ | _TODO_ | _TODO_ |
-| W | _TODO_ | _TODO_ | _TODO_ |
-| ST | _TODO_ | _TODO_ | _TODO_ |
+| CB | Ball-playing volume | Box defender (blocks, clearances, aerial %) vs front-foot ball-winner | Aggressive duel-winner vs long passer |
+| FB | Attacking involvement | Ball-carrier vs crosser | Defensive security vs dribbling |
+| DM | Deep playmaking volume | Destroyer vs progressor | Aerial stopper vs ball recoverer |
+| CM | Progression volume | Deep controller vs final-third creator | Ball-carrier vs passer-creator |
+| AM | Chance creation | Passer vs dribbler | Box presence vs dribbler |
+| W | Direct, box-attacking carrier | Crosser-creator vs dribbler | Inside forward (shooter) vs dribbler |
+| ST | Box-finishing volume | Link-up forward vs penalty-box striker | Target man vs efficient finisher |
 
-![Variance explained per position group](assets/pca_variance.png)
+<!-- Figure: assets/pca_variance.png - variance explained and components per group, built by src/figures.py -->
 
 ### Value model
 
-Fitted on `log(market value)`, because values span roughly €100k to €180m and
-are close to log-normal. On raw euros the loss is dominated by a handful of
-superstars and every prediction under €5m becomes noise — exactly the range
-recruitment cares about.
+Predicts each player-season's Transfermarkt value from age (as a spline -
+value peaks in the mid-twenties, which a straight line cannot represent),
+minutes, contract years remaining, league, position group, season and
+thirteen per-90 output stats.
 
-Inputs: age (splined — value peaks in the mid-twenties and a linear term cannot
-represent that), minutes, contract years remaining, league, position group,
-season, and a universal set of thirteen per-90 stats.
+- **Fitted on log value.** Values run from €50k to €180m and are close to
+  log-normal; on raw euros a handful of superstars dominate the loss and every
+  prediction under €5m becomes noise - exactly the range recruitment cares
+  about.
+- **Cross-validated grouped by player.** The same player appears in several
+  seasons, and ordinary k-fold would let his 2022-23 row help predict his
+  2024-25 row.
+- **Two candidates, the simpler one kept.** A Ridge baseline and gradient
+  boosting are scored on the same folds and finish level, so the readable
+  model wins.
+- **The flag uses out-of-fold predictions.** A player is undervalued when his
+  market value sits at least 1.65x below the prediction. In-sample predictions
+  would shrink every residual and hide exactly the players the flag exists to
+  find.
 
-Cross-validated with `GroupKFold` **grouped by player**. The same player appears
-in several seasons, and plain `KFold` lets his 2023-24 row train a model that
-predicts his 2024-25 row — which inflates R² into fiction.
-
-The shortlist is built from **out-of-fold** predictions. In-sample predictions
-would shrink every residual toward zero and hide exactly the players the tool
-exists to surface.
-
-![Predicted value by age](assets/age_curve.png)
-
-The ageing curve above is recovered from the data — nobody told the model that
-value peaks in the mid-twenties.
-
-![Predicted vs actual market value](assets/value_scatter.png)
+<!-- Figure: assets/age_curve.png - predicted value by age, built by src/figures.py -->
+<!-- Figure: assets/value_scatter.png - predicted vs actual value, built by src/figures.py -->
 
 ---
 
 ## Validation
 
-**TODO — fill from `notebooks/validation.ipynb`.** These are the numbers that
-separate a tool somebody might trust from a notebook that produced a plot.
+Every number here is produced by [`notebooks/validation.ipynb`](notebooks/validation.ipynb).
 
-| Claim | Value |
+| Check | Result |
 | --- | --- |
-| Player-seasons in the sample | _TODO_ |
-| Leagues × seasons | 5 leagues 2022-23 and 2024-25, plus Premier League 2023-24 |
-| Name match rate (FBref → Transfermarkt) | _TODO_% |
-| Median rank of a player's own adjacent season | _TODO_ |
-| Share of players whose own other season ranks top-5 | _TODO_% |
-| Value model median absolute error (CV, grouped by player) | _TODO_% |
-| Smallest position group | _TODO_ players |
+| Player-seasons in the model | 3,768 (smallest group: AM, 263) |
+| Name match rate, FBref → Transfermarkt | 96.0% |
+| Market value / Transfermarkt position / dated contract | 99.5% / 99.7% / 88% of rows |
+| Own next season, median rank in group | 19th - top 3.3% (random: 50%) |
+| Own next season inside the group's top 5% | 58.8% |
+| Value model, median absolute error (grouped CV) | 45.0% (€3.4m) |
+| Value model, R² on log value | 0.61 |
+| Top-5 comparables kept when the pool tightens from 600 to 900 minutes | 4.4 of 5 |
 
 ### Self-consistency
 
-The one similarity metric here that is not a matter of taste: the same player in
-an adjacent season should rank very high in his own neighbour list. A low median
-rank is quantitative evidence that the embedding captured the player rather than
-the noise.
+The same player a season later is the best comparable there is, so the closer
+he ranks to himself, the more the model captured the player rather than his
+team. Ranks are computed exactly for all 2,261 player-seasons with another
+season in the same group.
 
-### The eye test
+| Seasons apart | Player-seasons | Median rank | Median, as share of group | In the group's top 5% |
+| --- | --- | --- | --- | --- |
+| 1 | 583 | 19 | 3.3% | 58.8% |
+| 2 | 1,678 | 68.5 | 11.8% | 32.7% |
 
-**TODO** — your verdict on five players you know well, including **at least one
-miss, explained**. A README where every comp is perfect reads as unexamined.
+Two seasons apart is a much harder test - players change roles, clubs and
+systems - and most of the sample is two seasons apart, because 2023-24 is only
+available for the Premier League.
+
+### Does the undervalued flag mean anything?
+
+For every 2022-23 player-season, the market value the model saw is compared
+with the player's last valuation before July 2025, split by age because young
+players rise regardless.
+
+| Age | Flagged: median value change | Flagged: share that rose | Not flagged: median | Not flagged: share that rose |
+| --- | --- | --- | --- | --- |
+| 22 or under | 4.75x | 92% | 1.40x | 68% |
+| 23-26 | 1.45x | 65% | 0.84x | 39% |
+| 27-29 | 0.75x | 36% | 0.48x | 10% |
+| 30+ | 0.50x | 9% | 0.33x | 2% |
+| All (327 flagged, 1,132 not) | 1.06x | 50% | 0.60x | 26% |
+
+Flagged players did better in every age band. Part of what the flag catches
+is Transfermarkt lagging behind breakthrough seasons (Evan Ferguson at €1m,
+Rico Lewis at €1m in 2022-23) - genuinely useful to a recruiter, but not the
+same as knowing something the market cannot. Players no longer valued in 2025
+are left out.
 
 ### Known transfers
 
-**TODO** — replacement signings clubs actually made, and whether the model would
-have surfaced the replacement as a comparable to the departing player.
+Would the model have surfaced real replacement signings as comparables to the
+player they replaced? Ranks are exact, among everyone in the group.
+
+| Departed | Replacement | Rank before the move | Note |
+| --- | --- | --- | --- |
+| Gündoğan (Man City, 2022-23) | Kovačić | 48 of 599 | Top 8% |
+| Partey (Arsenal, 2024-25) | Zubimendi | 59 of 345 | Top 17% |
+| Alexander-Arnold (Liverpool, 2024-25) | Frimpong | 167 of 676 | A deliberately different profile |
+| Fabinho (Liverpool, 2022-23) | Endo | 254 of 345 | **1st** once at Liverpool (2023-24) |
+| Benzema (Real Madrid, 2022-23) | Joselu | 325 of 535 | A squad striker, not a like-for-like |
+| Xhaka (Arsenal, 2022-23) | Rice | - | Different position groups |
+| De Bruyne (Man City, 2024-25) | Reijnders | - | Different position groups |
+
+No replacement was a top-25 comparable *before* the move, and that is the
+honest result. Clubs often change profile on purpose - Frimpong is a running
+wing-back, not a playmaking full-back - and the model says so. The Endo row
+is the interesting one: nothing in his Stuttgart season resembled Fabinho, yet
+his first Liverpool season is Fabinho's single closest match. The model
+recognised the role he was asked to play, after the fact.
+
+### The eye test _(draft - rewrite in your own words after reading the notebook)_
+
+| Player | Top comparables | Verdict |
+| --- | --- | --- |
+| Rodri (2022-23) | Partey, Bentaleb, Busquets, Santamaria, Højbjerg | Deep controllers rather than pure ball-winners. Hit. |
+| Van Dijk (2024-25) | Tah, Alexsandro, Rrahmani, de Vrij | Composed centre-backs from possession sides. Hit. |
+| Salah (2024-25) | Mané, Martinelli, Greenwood, Lookman, Barcola | Wide forwards who shoot and carry. Hit. |
+| Haaland (2024-25) | Moukoko, Sørloth, Watkins, Lewandowski | Penalty-box strikers, no false nines. Hit. |
+| Alexander-Arnold (2024-25) | Trippier, Frankowski, Alba, Biraghi, Porro | **Miss.** The full-back stats see crossing volume and chance creation, but nothing records *where* a pass is played from, so a full-back who inverts to play long switches looks like a byline crosser. |
 
 ---
 
 ## Limitations
 
-Stated here rather than waiting for someone else to point them out.
-
-- **Transfermarkt values are crowd-sourced estimates, not transfer fees.** The
-  model predicts *the crowd's valuation*. A negative residual means "cheaper
-  than his profile suggests the market should rate him" — not "worth more than
-  he costs".
-- **Residuals skew toward cheaper leagues by construction**, because league is a
-  feature. Read the shortlist inside a league and budget filter; the app's
-  filters exist for exactly this reason.
-- **Some players are cheap for reasons no dataset holds** — injuries, attitude, a
-  visa, a release clause. This tool produces a shortlist to scout, not a decision
-  to sign.
-- **No minutes-by-position data.** A player who spent half a season at left-back
-  and half in midfield gets one position group and one set of axes.
-- **Season-level data only.** No match-to-match form, no opponent adjustment, no
-  in-possession phase splits.
-- **Upstream data is frozen.** `transfermarkt-datasets` paused updates: values
-  stop at 2026-06-12 and 2026/27 squads are not covered, so 2025-26 is the newest
-  usable season.
-  ([status](https://github.com/dcaribou/transfermarkt-datasets/discussions/383))
-- **Advanced stats come from archived pages.** FBref stopped publishing them in
-  January 2026, and the archived copies cover 2022-23 and 2024-25 fully but
-  2023-24 only for the Premier League. 2025-26 has no advanced stats at all, so
-  it is not in the model. Aerial duels and ball recoveries for La Liga,
-  Ligue 1 and Serie A 2024-25 come from a Kaggle copy rather than the
-  archive, checked against it first.
-- **Seasons are not evenly spaced.** With 2023-24 thin outside England, most
-  players' two seasons are two years apart, which makes them look less alike
-  than adjacent seasons would - read the self-consistency numbers by gap.
-- **Contract lengths for past seasons are reconstructed, not recorded.** About
-  a quarter of player-seasons - mostly players who changed club soon after -
-  have no trustworthy observation and are left blank, and an estimated 5-7%
-  of the rest miss an extension signed between the snapshot and the season.
+- **Transfermarkt values are crowd-sourced estimates, not fees.** The model
+  predicts the crowd's valuation, so "undervalued" means cheaper than his
+  profile suggests the market should rate him - not worth more than he costs.
+- **Some players are cheap for reasons no dataset holds** - injuries,
+  attitude, a release clause, a visa. This produces a shortlist to scout, not
+  a decision to sign.
+- **No current season.** FBref's advanced stats ended in January 2026 and the
+  Transfermarkt dataset is frozen at July 2026, so 2024-25 is the newest
+  season in the model.
+- **Seasons are unevenly covered.** 2023-24 exists only for the Premier
+  League, so most players' two seasons are two years apart.
+- **Season-level data only.** No match-by-match form, opponent adjustment or
+  phase-of-play splits, and a player who split a season between two positions
+  gets one group.
+- **Past contracts are reconstructed**, not recorded: 12% of rows are blank,
+  and a few percent miss an extension signed between a snapshot and the
+  season.
+- **The name join is imperfect.** A player Transfermarkt knows by an unrelated
+  name ("Zanka" for Mathias Jørgensen) stays unmatched, falls back to FBref's
+  coarse position, and is flagged in the app;
+  [`data/manual_name_overrides.csv`](data/manual_name_overrides.csv) is the
+  fix.
 - **Goalkeepers are excluded.**
-- **The name join is imperfect.** See the match rate above. The club check
-  catches namesakes and nicknames, but a player Transfermarkt knows by an
-  unrelated name ("Zanka" for Mathias Jørgensen) stays unmatched, falls back
-  to FBref's coarse position column, and is flagged in the app;
-  `data/manual_name_overrides.csv` is the fix.
 
 ---
 
-## Reproduce it
+## Run it
 
 ```bash
-git clone <your-repo-url>
-cd player-recruitment-tool
-
+git clone https://github.com/felipeaguilarch/recruitment-and-player-similarity.git
+cd recruitment-and-player-similarity
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS / Linux
-
+.venv\Scripts\activate            # Windows  (macOS / Linux: source .venv/bin/activate)
 pip install -r requirements.txt
+
+streamlit run app.py              # the app reads the committed data; no pipeline run needed
 ```
 
-Then run the pipeline. Stages are ordered, and each skips itself if its output
-already exists, so a re-run after a crash resumes rather than restarting:
+To rebuild everything from the committed intermediate data, offline, in about
+eight minutes:
 
 ```bash
-python run_pipeline.py --stage all
+python run_pipeline.py --stage all --from-stage merge --force
 ```
 
-The intermediate tables in `data/interim/` are committed, so on a fresh clone
-the four fetch stages find their outputs and skip, and everything from `merge`
-onward rebuilds offline in about eight minutes - byte for byte the files in
-`data/processed/`. That matters because not every source can be fetched again:
+`data/interim/` is committed because not every source can be fetched again:
 FBref no longer publishes the advanced stats, the raw contract snapshots are
 being garbage-collected upstream, and the Transfermarkt archive is pinned by
-md5 (`TM_ZIP_MD5` in `config.py`), so a newer release is refused rather than
-silently changing every number. Pass `--force` to a fetch stage only to rebuild
-from source on purpose.
+checksum (`TM_ZIP_MD5` in `config.py`) so a newer release is refused rather
+than silently changing every number. A rebuild reproduces `data/processed/`
+byte for byte.
 
-```bash
-streamlit run app.py
-```
-
-### Stages
-
-| Stage | Cold-start time | What it does |
+| Stage | Time | What it does |
 | --- | --- | --- |
-| `fetch-fbref` | 60–120 min | Rate-limited to ~1 request / 3s. Cached under `~/soccerdata`. |
-| `fetch-fbref-archive` | 2–5 min | Pinned Wayback Machine copies, ~2s apart. Cached under `data/raw/fbref_archive`. |
-| `fetch-kaggle` | < 1 min | Reads the hand-downloaded Kaggle CSV from `data/raw/kaggle/2425/`; skips with a warning if absent. |
-| `fetch-transfermarkt` | 3–10 min | One ~241 MB download |
-| `fetch-tm-contracts` | < 1 min | Seven pinned scrape files (~15 MB). Cached under `data/raw/transfermarkt/contracts`. |
-| `merge` | 5–7 min | The fuzzy name join and the club check dominate |
-| `features` | < 1 min | Per-90, possession-adjust, percentile-rank |
-| `similarity` | 1–2 min | PCA + cosine kNN per group; UMAP is the slow part |
-| `value` | 1–3 min | Cross-validation across two candidate models |
-| `figures` | < 1 min | Rebuilds `assets/` |
-
-Only `fetch-fbref` is genuinely expensive, and because `soccerdata` caches the
-raw HTML, a second cold start is far quicker than the first.
+| `fetch-fbref` | 60-120 min | Live FBref via `soccerdata`, rate-limited; cached under `~/soccerdata` |
+| `fetch-fbref-archive` | 2-5 min | Pinned Wayback Machine copies of the advanced stats |
+| `fetch-kaggle` | < 1 min | 2024-25 gaps from the hand-downloaded Kaggle file in `data/raw/kaggle/2425/` |
+| `fetch-transfermarkt` | 3-10 min | One ~241 MB download, checksum-verified |
+| `fetch-tm-contracts` | < 1 min | Seven pinned contract snapshots |
+| `merge` | 5-7 min | One table per player-season; the name join and club check dominate |
+| `features` | < 1 min | Per-90, possession adjustment, percentiles |
+| `similarity` | < 1 min | PCA, cosine neighbours, UMAP style map, self-consistency |
+| `value` | < 1 min | Grouped cross-validation of both models, the undervalued flag |
+| `figures` | < 1 min | README figures in `assets/` |
 
 ```bash
 python run_pipeline.py --list
-python run_pipeline.py --stage features --force
-python run_pipeline.py --stage all --from-stage merge
+pytest -q                         # runs on a clean clone, no data needed
 ```
 
-If FBref changes a table header and a feature stops resolving:
-
-```bash
-python run_pipeline.py --stage inspect-columns
-```
-
-That writes every column name actually returned to `reports/fbref_columns.txt`.
-Fix the patterns in `src/config.py`, then re-run `--stage features --force`.
-
-```bash
-pytest -q
-```
-
-The test suite runs on a clean clone with no data — it catches config drift
-(a feature listed in a position group but missing from the registry, a season
-key that parses to the wrong year) before you spend an hour on a pipeline run.
+The tests include a synthetic end-to-end run of every modelling stage, so
+index-alignment bugs - the classic one is treating `kneighbors`' positional
+indices as player ids - fail in seconds rather than after a pipeline run.
 
 ---
 
-## Repo layout
+## Repository layout
 
 ```
 .
-├── app.py                      Streamlit entry point - reads only, never fits
-├── run_pipeline.py             Stage runner; reproduces every artefact
-├── requirements.txt
-├── .streamlit/config.toml      App theme
+├── app.py                       Streamlit app - reads committed data, never fits
+├── run_pipeline.py              Stage runner
+├── sandbox.py                   Interactive playground on synthetic data
 ├── src/
-│   ├── config.py               EVERY tunable choice lives here
-│   ├── paths.py                Single source of truth for file locations
-│   ├── fbref_extra.py          Widened FBref reader (passing/defense/possession)
-│   ├── fetch_fbref.py          Stage 1a
-│   ├── fetch_fbref_archive.py  Stage 1a: advanced stats from the Wayback Machine
-│   ├── fetch_kaggle.py         Stage 1d: 2024-25 gaps from a checked Kaggle copy
-│   ├── fetch_transfermarkt.py  Stage 1b
-│   ├── fetch_tm_contracts.py   Stage 1c: contract length as it stood each season
-│   ├── name_matching.py        Normalise -> block -> fuzzy -> manual override
-│   ├── merge.py                Stage 2: one player-season table
-│   ├── features.py             Stage 3: per-90, possession-adjust, percentiles
-│   ├── similarity.py           Stage 4: PCA + cosine kNN per group
-│   ├── value_model.py          Stage 5: expected value, undervalued shortlist
-│   ├── radar.py                Plotly charts for the app
-│   └── figures.py              Stage 6: matplotlib figures for this README
+│   ├── config.py                Every tunable choice: leagues, features, radars, thresholds
+│   ├── paths.py                 Every file location
+│   ├── fbref_extra.py           soccerdata reader widened to all FBref stat tables
+│   ├── fetch_fbref.py           Live FBref player and team stats
+│   ├── fetch_fbref_archive.py   Advanced stats from the Wayback Machine
+│   ├── fetch_kaggle.py          2024-25 gaps from a checked Kaggle copy
+│   ├── fetch_transfermarkt.py   Market values and player metadata
+│   ├── fetch_tm_contracts.py    Contract lengths as they stood each season
+│   ├── name_matching.py         Normalise, block, fuzzy-match, override
+│   ├── merge.py                 One row per player-season, club-checked
+│   ├── features.py              Per-90, possession adjustment, percentiles
+│   ├── similarity.py            PCA, cosine neighbours, style map, validation
+│   ├── value_model.py           Expected value and the undervalued flag
+│   ├── radar.py                 Plotly charts for the app
+│   └── figures.py               Matplotlib figures for this README
 ├── data/
-│   ├── raw/                    gitignored - reproducible downloads
-│   ├── interim/                COMMITTED - sources that cannot be refetched
-│   ├── processed/              COMMITTED - the deployed app reads these
-│   ├── fbref_archive_snapshots.csv  Pinned Wayback captures
-│   ├── tm_contract_snapshots.csv    Pinned contract snapshots
-│   └── manual_name_overrides.csv
-├── artifacts/                  COMMITTED - fitted models (joblib)
-├── reports/                    COMMITTED - evidence the pipeline behaved
-├── notebooks/validation.ipynb  Sanity checks against players you know
-├── assets/                     Figures for this README
-└── tests/test_smoke.py
+│   ├── raw/                     Downloads (gitignored)
+│   ├── interim/                 Committed: sources that cannot be fetched again
+│   ├── processed/               Committed: what the app reads
+│   └── *.csv                    Pinned snapshots and manual name overrides
+├── artifacts/                   Fitted models (joblib)
+├── reports/                     Evidence the pipeline behaved: coverage, joins, PCA, metrics
+├── notebooks/validation.ipynb   Every validation number above
+└── tests/                       Smoke tests and a synthetic end-to-end run
 ```
 
-### Why `data/processed/` and `artifacts/` are committed
-
-Streamlit Community Cloud has no way to run the pipeline, so the app has to
-read artefacts that are already in the repo. They are small — keep them that
-way by dropping unused columns before writing. GitHub rejects single files over
-100 MB; if a parquet file starts approaching that, trim columns rather than
-reaching for Git LFS.
-
----
-
-## Deployment notes
-
-- Community Cloud installs from `requirements.txt` at the repo root. An
-  unpinned dependency resolving differently on the server than on your machine
-  is the classic first failed deploy — run `pip freeze > requirements.lock.txt`
-  from a clean venv before you deploy.
-- **Check which Python versions Community Cloud offers before building your
-  venv.** Discovering a mismatch at deploy time means re-resolving every pin.
-- Deploy an early, near-empty version on day one, so the pipeline is already
-  proven by the time the real app is ready.
-- The app loads only the columns it needs and keeps position-group matrices
-  separate rather than one wide frame, to stay inside the memory ceiling.
+`data/processed/` and `artifacts/` are committed because Streamlit Community
+Cloud cannot run the pipeline; every file is kept well under GitHub's 100 MB
+limit.
 
 ---
 
 ## Credits
 
-- Stats: [FBref](https://fbref.com) via
-  [`soccerdata`](https://github.com/probberechts/soccerdata) by Pieter Robberechts;
-  advanced stats (Opta) from the [Internet Archive](https://archive.org/)'s copies of FBref
-- Market values:
+- Stats: [FBref](https://fbref.com) (Opta data), via
+  [`soccerdata`](https://github.com/probberechts/soccerdata) by Pieter
+  Robberechts, the [Internet Archive](https://archive.org/)'s copies of FBref,
+  and hubertsidorowicz's
+  [Kaggle copy](https://www.kaggle.com/datasets/hubertsidorowicz/football-players-stats-2024-2025)
+- Market values, contracts and transfers:
   [`transfermarkt-datasets`](https://github.com/dcaribou/transfermarkt-datasets)
-  by David Cariboo, including its raw scrapes for dated contract lengths
+  by David Cariboo

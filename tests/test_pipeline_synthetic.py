@@ -16,9 +16,8 @@ what notebooks/validation.ipynb is for.
 
 A stage that still raises NotImplementedError does not error the whole file:
 its tests (and those of every stage after it) are SKIPPED with a note saying
-which stage is unfinished. So a run doubles as a progress meter - finish
-value_model.py and its three tests turn from skipped to passed even while
-figures.py is still a stub.
+which stage is unfinished. Figure builders are checked one by one, so a single
+unimplemented figure is skipped while the rest are still verified.
 """
 
 from __future__ import annotations
@@ -204,6 +203,7 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
 
 # --- features --------------------------------------------------------------
 
+
 def test_all_catalogue_features_resolve(pipeline):
         resolution = pd.read_csv(pipeline.FEATURE_RESOLUTION)
         missing = resolution[resolution["status"] == "MISSING"]["feature"].tolist()
@@ -242,6 +242,7 @@ def test_every_group_has_percentiles(pipeline):
 
 
 # --- similarity ------------------------------------------------------------
+
 
 def test_similarity_models_cover_every_group(pipeline):
         import joblib
@@ -291,6 +292,7 @@ def test_loadings_and_style_map_written(pipeline):
 
 # --- value model -----------------------------------------------------------
 
+
 def test_value_predictions_are_positive_and_complete(pipeline):
         needs("value")
         predictions = pd.read_parquet(pipeline.VALUE_PREDICTIONS)
@@ -318,6 +320,7 @@ def test_value_metrics_report_both_candidate_models(pipeline):
 
 
 # --- figures ---------------------------------------------------------------
+
 
 def test_every_readme_figure_renders(pipeline):
         needs("figures")

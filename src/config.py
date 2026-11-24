@@ -14,8 +14,8 @@ from dataclasses import dataclass, field
 
 # soccerdata league identifiers. Confirm against the installed version with:
 #     python -c "import soccerdata as sd; print(sd.FBref.available_leagues())"
-# Start with the big five; add a selling league once the pipeline runs end to
-# end, because that is where undervalued targets actually live.
+# The big five. A selling league (commented out below) is the natural next
+# step, because that is where undervalued targets actually live.
 LEAGUES: list[str] = [
         "ENG-Premier League",
         "ESP-La Liga",
@@ -100,8 +100,8 @@ SUB_POSITION_TO_GROUP: dict[str, str] = {
 
 # Fallback for players who failed the Transfermarkt join, keyed on FBref's
 # coarse `pos`. Deliberately crude - these players are flagged
-# `position_source == "fbref_fallback"` so you can exclude them from the
-# case study if you would rather not defend the guess.
+# `position_source == "fbref_fallback"`, and the app can exclude them and
+# captions any profile whose position was guessed.
 FBREF_POS_TO_GROUP: dict[str, str] = {
         "DF": "CB",
         "DF,MF": "FB",
@@ -392,8 +392,8 @@ GROUP_SPECS: dict[str, GroupSpec] = {
 # ---------------------------------------------------------------------------
 
 # Keep enough PCA components to explain this share of variance within a group.
-# Usually lands between 5 and 8 components. Name the first three per group in
-# the README - that narrative is half the value of the project.
+# Lands between 5 and 9 components; the first three per group are named in the
+# README's style-dimension table.
 PCA_VARIANCE_TARGET: float = 0.85
 PCA_MIN_COMPONENTS: int = 3
 PCA_MAX_COMPONENTS: int = 10
@@ -402,7 +402,13 @@ PCA_MAX_COMPONENTS: int = 10
 # magnitude, which is what "plays like him" means. Euclidean blends style with
 # level and will keep returning elite players as comparables for everyone.
 SIMILARITY_METRIC: str = "cosine"
-N_NEIGHBOURS: int = 25  # stored per player; the app shows the top 5
+# Neighbours stored per player-season. Deliberately deep: the app's filters
+# (budget, age, minutes, league) are applied to this list, and with only 25
+# stored a realistic brief - under 23, under EUR 8m - left 95% of players with
+# fewer than five candidates. The app then shows the closest 25 that survive.
+N_NEIGHBOURS: int = 200
+#: Rows the app's comparables table shows after filtering.
+APP_COMPARABLES_SHOWN: int = 25
 
 # A group with fewer than this many qualifying players produces meaningless
 # neighbours. The pipeline warns rather than failing.
@@ -482,8 +488,8 @@ MIN_VALUE_COVERAGE: float = 0.5
 # rapidfuzz token_set_ratio thresholds.
 NAME_MATCH_ACCEPT: int = 90  # auto-accept at or above
 NAME_MATCH_REJECT: int = 80  # auto-reject below
-# Scores between the two land in reports/name_match_review.csv for you to
-# adjudicate by hand into data/manual_name_overrides.csv.
+# Scores between the two land in reports/name_match_review.csv, to be settled
+# by hand in data/manual_name_overrides.csv.
 
 # Candidate blocking: only compare players whose birth years agree within this
 # many years. Blocking is what keeps the match fast AND prevents most false
@@ -513,7 +519,6 @@ TM_ZIP_MD5: str | None = "241e59deea96116fe961c1a29b56cfbc"
 # data/raw manageable.
 TM_TABLES: list[str] = ["players", "player_valuations", "competitions", "clubs"]
 
-# Identify yourself when scraping. Replace with your own contact or project URL
-# before running anything at volume - a generic agent string on a rate-limited
-# site is how you get blocked.
-USER_AGENT: str = "player-recruitment-tool/0.1 (portfolio project; +https://github.com/)"
+# Sent with every download, so the sites serving the data can see what is
+# asking. Honest and stable on purpose: no rotation, no browser impersonation.
+USER_AGENT: str = "player-recruitment-tool/0.1 (portfolio project)"

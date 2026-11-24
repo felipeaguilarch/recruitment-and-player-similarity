@@ -1,9 +1,8 @@
-"""Interactive sandbox - poke at one function at a time on synthetic data.
+"""Interactive sandbox - try one function at a time on synthetic data.
 
-The test suite's `pipeline` fixture runs all four stages in one go, so no
-similarity test passes until the whole module works. That is fine for CI and
-useless while you are writing `choose_n_components`. This builds the same
-synthetic frames outside pytest and leaves them in your namespace:
+The test suite's `pipeline` fixture runs every stage in one go, which is right
+for CI but slow for experimenting with a single function. This builds the same
+synthetic frames outside pytest and leaves them in the interactive namespace:
 
     python -i sandbox.py
 
@@ -123,8 +122,8 @@ features_mod.run(force=True)
 frame = pd.read_parquet(paths.FEATURES)
 specs = features_mod.available_group_specs(list(frame.columns))
 
-# Import the stage modules last so a NotImplementedError at import time, if you
-# ever add one, does not stop the frames above from being built.
+# Import the stage modules last, so an error in one of them cannot stop the
+# frames above from being built.
 from src import figures as figures_mod  # noqa: E402,F401
 from src import radar as radar_mod  # noqa: E402,F401
 from src import similarity as similarity_mod  # noqa: E402

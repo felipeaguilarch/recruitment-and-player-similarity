@@ -1,7 +1,7 @@
 """Tests that run on a clean clone, before any data has been downloaded.
 
 Deliberately not a test suite for the models - those need data. These catch
-the mistakes that otherwise cost you an hour into a pipeline run: a feature
+the mistakes that would otherwise surface an hour into a pipeline run: a feature
 listed in a position group but absent from the registry, a season key that
 parses to the wrong year, a name normaliser that drops a character it should
 keep.
@@ -23,6 +23,7 @@ from src.name_matching import normalise_name, season_end_year, season_midpoint
 
 
 # --- config integrity ------------------------------------------------------
+
 
 def test_every_group_feature_exists_in_registry():
         for group, spec in config.GROUP_SPECS.items():
@@ -66,6 +67,7 @@ def test_seasons_stop_before_the_transfermarkt_cutoff():
 
 # --- column flattening -----------------------------------------------------
 
+
 @pytest.mark.parametrize(("raw", "expected"), [
         ("SoT%", "sot_pct"),
         ("npxG/Sh", "npxg_sh"),
@@ -86,6 +88,7 @@ def test_percent_survives_flattening():
 
 
 # --- name matching ---------------------------------------------------------
+
 
 @pytest.mark.parametrize(("raw", "expected"), [
         ("Sergio Reguilón", "sergio reguilon"),
@@ -117,6 +120,7 @@ def test_season_end_year_rejects_nonsense():
 
 
 # --- feature engineering ---------------------------------------------------
+
 
 def test_parse_fbref_age_handles_years_and_days():
         assert parse_fbref_age("25-123") == pytest.approx(25 + 123 / 365.25)
@@ -179,6 +183,7 @@ def test_resolve_features_disambiguates_repeated_stat_names(isolated_reports):
 
 # --- archived FBref stats --------------------------------------------------
 
+
 def _live_frame(rows):
         """A tiny live-style FBref table: (team, player, born, 90s, passes)."""
         index = pd.MultiIndex.from_tuples(
@@ -235,6 +240,7 @@ def test_archive_overlay_fills_gaps_without_adding_rows():
 
 
 # --- dated contracts ----------------------------------------------------------
+
 
 def _obs(player_id, joined, contract_end, observed_on, source):
         return {
@@ -293,6 +299,7 @@ def test_tm_dates_parse_in_both_scrape_formats():
 
 # --- club check on the name join ----------------------------------------------
 
+
 def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypatch, tmp_path):
         from src import merge
 
@@ -336,6 +343,7 @@ def test_club_check_swaps_a_namesake_for_the_player_who_was_at_the_club(monkeypa
 
 # --- value model groups ----------------------------------------------------
 
+
 def test_value_groups_keep_a_player_together_across_seasons():
         from src.value_model import player_groups
 
@@ -355,6 +363,7 @@ def test_value_groups_keep_a_player_together_across_seasons():
 
 
 # --- pinned Transfermarkt archive --------------------------------------------
+
 
 def test_transfermarkt_download_refuses_a_different_archive(monkeypatch, tmp_path):
         from src import fetch_transfermarkt
@@ -384,3 +393,39 @@ def test_transfermarkt_download_refuses_a_different_archive(monkeypatch, tmp_pat
                 fetch_transfermarkt.download_zip(force=True)
         assert zip_path.read_bytes() == b"old archive"            # good copy untouched
         assert list(tmp_path.iterdir()) == [zip_path]             # no .part left behind
+
+
+# --- similarity validation -------------------------------------------------
+
+
+def test_own_season_ranks_counts_every_row_not_just_stored_neighbours():
+        from src.similarity import own_season_ranks
+
+        # A's two seasons are close, but C sits even closer to A's 2022-23 row,
+        # so A's own other season ranks 2nd. B has one season and is not scored.
+        models = {"CB": {
+                "scores": np.array([[1.0, 0.0], [0.9, 0.1], [0.0, 1.0], [0.95, 0.05]]),
+                "players": np.array(["A", "A", "B", "C"]),
+                "ids": np.array(["A__2223", "A__2425", "B__2223", "C__2223"]),
+        }}
+        seasons = {"A__2223": "2223", "A__2425": "2425", "B__2223": "2223", "C__2223": "2223"}
+        ranks = own_season_ranks(models, seasons).set_index("player_season_id")
+
+        assert set(ranks.index) == {"A__2223", "A__2425"}
+        assert ranks.loc["A__2223", "rank"] == 2
+        assert ranks.loc["A__2223", "season_gap"] == 2
+        assert ranks.loc["A__2223", "group_size"] == 4
+
+
+def test_own_season_ranks_ignore_a_second_row_in_the_same_season():
+        from src.similarity import own_season_ranks
+
+        # A mid-season transfer gives one player two rows in the same season;
+        # that is not "his other season" and must not be scored.
+        models = {"CM": {
+                "scores": np.array([[1.0, 0.0], [0.99, 0.01], [0.0, 1.0]]),
+                "players": np.array(["A", "A", "B"]),
+                "ids": np.array(["A__2425__X", "A__2425__Y", "B__2425__Z"]),
+        }}
+        seasons = {"A__2425__X": "2425", "A__2425__Y": "2425", "B__2425__Z": "2425"}
+        assert own_season_ranks(models, seasons).empty

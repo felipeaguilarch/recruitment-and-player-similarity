@@ -121,7 +121,6 @@ def fit_group(frame: pd.DataFrame, feature_names: list[str]) -> dict:
                 "explained_variance_ratio": pca.explained_variance_ratio_
         }
 
-        
 
 def neighbours_frame(models: dict[str, dict]) -> pd.DataFrame:
         """Top-N comparables per player-season, self excluded.
@@ -132,9 +131,8 @@ def neighbours_frame(models: dict[str, dict]) -> pd.DataFrame:
         index bugs hide. `similarity` is 1 - distance, because sklearn's
         "cosine" metric returns cosine DISTANCE.
 
-        `same_player` is flagged rather than removed: the same player in an
-        adjacent season ranking highly is exactly the self-consistency check in
-        validate(), and the app hides those rows from the comps list. It
+        `same_player` is flagged rather than removed: the app hides those rows
+        from the comparables list, and the notebook reads them. It
         compares player names, so two different players who share a name within
         one group are also flagged.
 
@@ -154,7 +152,7 @@ def neighbours_frame(models: dict[str, dict]) -> pd.DataFrame:
                                 neighbour_i = int(neighbor_index)
 
                                 if neighbour_i == i:
-                                        continue  
+                                        continue
 
                                 rank += 1
                                 rows.append({
@@ -226,6 +224,7 @@ def loadings_frame(models: dict[str, dict]) -> pd.DataFrame:
                 .reset_index(drop=True)
         )
 
+
 def style_map(models: dict[str, dict]) -> pd.DataFrame:
         """2-D coordinates per player-season for the app's scatter.
 
@@ -260,7 +259,8 @@ def style_map(models: dict[str, dict]) -> pd.DataFrame:
                                 n_neighbors=min(15, len(scores) - 1),
                                 min_dist=0.1,
                                 n_components=2,
-                                random_state=42
+                                random_state=42,
+                                n_jobs=1,          # a fixed seed forces one thread; say so, and skip the warning
                         ).fit_transform(scores)
                         method = "umap"
 
@@ -285,43 +285,113 @@ def style_map(models: dict[str, dict]) -> pd.DataFrame:
                 "method"
         ])
 
-def validate(neighbours: pd.DataFrame) -> dict:
+
+def own_season_ranks(models: dict[str, dict], seasons: dict[str, str]) -> pd.DataFrame:
+        """Exact rank of each player's own other season among everyone in his group.
+
+        For every player-season whose player has a different season in the
+        same group, ranks all other rows of the group by cosine similarity and
+        records where the player's own other season lands (1 = closest). With
+        several other seasons the best rank is kept, along with the season gap
+        it came from. Computed from the PCA scores directly rather than read
+        from the stored neighbour list, so a season ranked beyond
+        config.N_NEIGHBOURS still counts - as a miss, not as missing.
+
+        "Same player" means the same name within the group, exactly as
+        neighbours_frame flags it, so two namesakes in one group are counted
+        as one player.
+
+        Returns player_season_id, position_group, rank, group_size and
+        season_gap (in seasons).
+        """
+        rows = []
+        for group, model in models.items():
+                scores = np.asarray(model["scores"], dtype=float)
+                unit = scores / np.linalg.norm(scores, axis=1, keepdims=True).clip(min=1e-12)
+                similarity = unit @ unit.T
+                np.fill_diagonal(similarity, -np.inf)          # a row is never its own neighbour
+
+                players = pd.Series(model["players"])
+                for player, positions in players.groupby(players).groups.items():
+                        if len(positions) < 2:
+                                continue
+                        for i in positions:
+                                # Only the player's OTHER seasons. Two rows in the same season
+                                # are a mid-season transfer split across clubs, or namesakes.
+                                own = seasons[model["ids"][i]]
+                                others = [j for j in positions if seasons[model["ids"][j]] != own]
+                                if not others:
+                                        continue
+                                # rank of j = 1 + number of rows strictly closer to i than j
+                                ranks = [int((similarity[i] > similarity[i, j]).sum()) + 1 for j in others]
+                                best = int(np.argmin(ranks))
+                                gap = abs(
+                                        int(str(seasons[model["ids"][i]])[2:])
+                                        - int(str(seasons[model["ids"][others[best]]])[2:])
+                                )
+                                rows.append({
+                                        "player_season_id": model["ids"][i],
+                                        "position_group": group,
+                                        "rank": ranks[best],
+                                        "group_size": len(players),
+                                        "season_gap": gap,
+                                })
+        return pd.DataFrame(
+                rows, columns=["player_season_id", "position_group", "rank", "group_size", "season_gap"]
+        )
+
+
+def validate(models: dict[str, dict], seasons: dict[str, str]) -> dict:
         """Self-consistency: how highly do players rank their own other seasons?
 
-        The one similarity metric here that is not a matter of taste. A low
-        median rank is real quantitative evidence that the embedding captured
-        the player rather than the noise. Put the number in the README.
+        The one similarity metric here that is not a matter of taste. The same
+        player a season later is the best "comparable" there is, so the closer
+        he ranks to himself, the more the embedding captured the player rather
+        than his team or the noise.
 
-        For each player-season with at least one same-player neighbour, takes
-        the best (lowest) rank among them, then reports the median and the
-        share landing in the top 5. Writes the result to paths.VALIDATION as
-        JSON and returns it.
+        Uses own_season_ranks, so every player with two seasons in a group is
+        scored - including those whose other season falls outside the stored
+        neighbour list, which an earlier version silently left out and so
+        flattered the model.
 
-        Known bias: a player-season whose other season fell outside the top N
-        has no same_player row, so it is left out rather than counted as a
-        miss. The numbers therefore flatter the model somewhat.
+        Reports, and writes to paths.VALIDATION:
 
-        Interpreting it: a single-digit median is good. In the dozens, either
-        the features describe the team more than the player, or seasons are
-        standardised so differently that the same player drifts.
+        - median_rank / top_5_share: the raw rank and the share ranked 1-5.
+        - median_rank_pct / top_5pct_share: the rank as a share of the group's
+          size, which makes groups of 263 and 851 comparable. A random
+          embedding would sit near 50%.
+        - by_season_gap: the same, split by how many seasons apart the two
+          rows are. A two-season gap is a harder test than an adjacent one.
+        - player_seasons_scored.
 
-        Raises ValueError if there are no same-player neighbours at all.
+        Raises ValueError if no player has two seasons in any group.
         """
-        neighbors_filtered = neighbours.loc[neighbours["same_player"]]
-        grouped = neighbors_filtered.groupby("player_season_id")["rank"].min()
+        ranks = own_season_ranks(models, seasons)
+        if ranks.empty:
+                raise ValueError("No player has two seasons in the same group.")
 
-        if grouped.empty:
-                raise ValueError("No same players found.")
+        share = ranks["rank"] / ranks["group_size"]
 
-        validation_results = {
-                "median_rank": float(grouped.median()),
-                "top_5_share": float((grouped <= 5).mean())
+        def summary(rank: pd.Series, pct: pd.Series) -> dict:
+                return {
+                        "median_rank": float(rank.median()),
+                        "top_5_share": float((rank <= 5).mean()),
+                        "median_rank_pct": float(pct.median()),
+                        "top_5pct_share": float((pct <= 0.05).mean()),
+                        "player_seasons_scored": int(len(rank)),
+                }
+
+        results = summary(ranks["rank"], share)
+        results["by_season_gap"] = {
+                str(gap): summary(ranks.loc[rows.index, "rank"], share.loc[rows.index])
+                for gap, rows in ranks.groupby("season_gap")
         }
 
         paths.ensure_dirs()
-        paths.VALIDATION.write_text(json.dumps(validation_results, indent=2))
+        paths.VALIDATION.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
-        return validation_results
+        return results
+
 
 def run(force: bool = False) -> dict[str, dict]:
         """Stage entry point, called by run_pipeline.py.
@@ -363,7 +433,7 @@ def run(force: bool = False) -> dict[str, dict]:
 
                 if (
                        len(group_frame) < config.PCA_MIN_COMPONENTS
-                       or len(feature_names) < config.PCA_MIN_COMPONENTS 
+                       or len(feature_names) < config.PCA_MIN_COMPONENTS
                 ):
                         logger.warning("Skipping group %s: not enough rows or features to fit PCA.",group)
                         continue
@@ -395,9 +465,10 @@ def run(force: bool = False) -> dict[str, dict]:
         loadings.to_csv(paths.PCA_LOADINGS, index=False)
         variance.to_csv(paths.PCA_VARIANCE, index=False)
         style.to_parquet(paths.STYLE_MAP, index=False)
-        validate(neighbours)
+        validate(models, dict(zip(frame["player_season_id"], frame["season"].astype(str))))
 
         return models
+
 
 def top_comps( player_season_id: str, neighbours: pd.DataFrame,
         n: int = 5, exclude_same_player: bool = True,) -> pd.DataFrame:

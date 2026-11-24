@@ -116,11 +116,11 @@ def main() -> int:
 
         if args.stage == "all":
                 start = STAGE_NAMES.index(args.from_stage) if args.from_stage else 0
-                todo = STAGE_NAMES[start:]
+                to_run = STAGE_NAMES[start:]
         else:
-                todo = [args.stage]
+                to_run = [args.stage]
 
-        for name in todo:
+        for name in to_run:
                 logging.info("=" * 64)
                 logging.info("STAGE: %s", name)
                 logging.info("=" * 64)

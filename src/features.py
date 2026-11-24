@@ -104,12 +104,12 @@ def resolve_features(columns: list[str]) -> tuple[dict[str, str], pd.DataFrame]:
 
         report = pd.DataFrame(rows,
                               columns=[
-                                        "feature", 
-                                        "status", 
+                                        "feature",
+                                        "status",
                                         "column",
-                                        "matched_pattern", 
+                                        "matched_pattern",
                                         "patterns_tried",
-                                        "per90", 
+                                        "per90",
                                         "possession_adjusted"
                               ])
 
@@ -121,7 +121,7 @@ def resolve_features(columns: list[str]) -> tuple[dict[str, str], pd.DataFrame]:
         paths.FEATURE_RESOLUTION.parent.mkdir(parents=True, exist_ok=True)
         report.to_csv(paths.FEATURE_RESOLUTION, index=False)
 
-        return resolved, report                
+        return resolved, report
 
 
 def effective_group_specs(resolved: dict[str, str]) -> dict[str, list[str]]:
@@ -264,7 +264,7 @@ def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.D
                         continue
 
                 group_rows = features.loc[
-                        features["position_group"] == group, 
+                        features["position_group"] == group,
                         ["player_season_id", "position_group", "season", *usable]
                 ].copy()
 
@@ -290,7 +290,6 @@ def add_percentiles(features: pd.DataFrame, specs: dict[str, list[str]]) -> pd.D
                 return pd.DataFrame(columns=["player_season_id", "position_group"])
 
         return pd.concat(frames, ignore_index=True)
-
 
 
 def run(force: bool = False) -> pd.DataFrame:
@@ -337,7 +336,7 @@ def run(force: bool = False) -> pd.DataFrame:
         percentiles = add_percentiles(features_frame, specs)
         percentiles.to_parquet(paths.PERCENTILES, index=False)
 
-        for group, features in specs.items():
+        for group in specs:
                 group_c = int((features_frame["position_group"] == group).sum())
 
                 logger.info("Group %s: %d players after filtering.", group, group_c)
