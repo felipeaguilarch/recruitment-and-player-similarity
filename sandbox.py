@@ -42,6 +42,8 @@ _redirect = {
         "SIMILARITY": _root / "processed/similarity.parquet",
         "STYLE_MAP": _root / "processed/style_map.parquet",
         "VALUE_PREDICTIONS": _root / "processed/value_predictions.parquet",
+        "ROLES": _root / "processed/roles.parquet",
+        "ROLE_SCORES": _root / "processed/role_scores.parquet",
         "SIMILARITY_MODELS": _root / "artifacts/similarity_models.joblib",
         "VALUE_MODEL": _root / "artifacts/value_model.joblib",
         "FEATURE_RESOLUTION": _root / "reports/feature_resolution.csv",
@@ -50,6 +52,8 @@ _redirect = {
         "VALIDATION": _root / "reports/similarity_validation.json",
         "VALUE_METRICS": _root / "reports/value_model_metrics.json",
         "UNDERVALUED": _root / "reports/undervalued_shortlist.csv",
+        "ROLE_STABILITY": _root / "reports/role_stability.csv",
+        "ROLE_TOP_PLAYERS": _root / "reports/role_top_players.csv",
 }
 for _key, _value in _redirect.items():
         setattr(paths, _key, _value)
@@ -126,6 +130,7 @@ specs = features_mod.available_group_specs(list(frame.columns))
 # frames above from being built.
 from src import figures as figures_mod  # noqa: E402,F401
 from src import radar as radar_mod  # noqa: E402,F401
+from src import roles as roles_mod  # noqa: E402,F401
 from src import similarity as similarity_mod  # noqa: E402
 from src import value_model as value_mod  # noqa: E402,F401
 from src.similarity import (  # noqa: E402,F401
@@ -137,4 +142,4 @@ print()
 print(f"sandbox ready   outputs -> {_root}")
 print(f"  frame   {frame.shape[0]} rows x {frame.shape[1]} cols")
 print(f"  specs   {', '.join(f'{g}({len(f)})' for g, f in specs.items())}")
-print("  modules similarity_mod, value_mod, radar_mod, figures_mod")
+print("  modules similarity_mod, roles_mod, value_mod, radar_mod, figures_mod")

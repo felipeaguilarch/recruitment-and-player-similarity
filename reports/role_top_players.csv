@@ -1,0 +1,391 @@
+position_group,role,season,rank,player,team,score
+AM,Second striker,2425,1,Jamal Musiala,Bayern Munich,99.09909909909909
+AM,Second striker,2425,2,Dani Olmo,Barcelona,95.4954954954955
+AM,Second striker,2425,3,Rémy Cabella,Lille,95.4954954954955
+AM,Second striker,2425,4,Oihan Sancet,Athletic Club,93.69369369369369
+AM,Second striker,2425,5,Fermin López,Barcelona,92.7927927927928
+AM,Second striker,2324,1,Phil Foden,Manchester City,100.0
+AM,Second striker,2324,2,Cole Palmer,Chelsea,96.0
+AM,Second striker,2324,3,Eberechi Eze,Crystal Palace,96.0
+AM,Second striker,2324,4,Justin Kluivert,Bournemouth,88.0
+AM,Second striker,2324,5,Kevin De Bruyne,Manchester City,84.0
+AM,Second striker,2223,1,Justin Kluivert,Valencia,98.4251968503937
+AM,Second striker,2223,2,Jamal Musiala,Bayern Munich,97.63779527559055
+AM,Second striker,2223,3,Marco Asensio,Real Madrid,96.8503937007874
+AM,Second striker,2223,4,Phil Foden,Manchester City,96.06299212598425
+AM,Second striker,2223,5,Riccardo Saponara,Fiorentina,95.2755905511811
+AM,Advanced playmaker,2425,1,Rayan Cherki,Lyon,100.0
+AM,Advanced playmaker,2425,2,Giovani Lo Celso,Real Betis,99.09909909909909
+AM,Advanced playmaker,2425,3,Kevin De Bruyne,Manchester City,98.1981981981982
+AM,Advanced playmaker,2425,4,Florian Wirtz,Leverkusen,97.2972972972973
+AM,Advanced playmaker,2425,5,Lee Kang-in,Paris SG,96.3963963963964
+AM,Advanced playmaker,2324,1,Kevin De Bruyne,Manchester City,100.0
+AM,Advanced playmaker,2324,2,Martin Ødegaard,Arsenal,96.0
+AM,Advanced playmaker,2324,3,Bruno Fernandes,Manchester Utd,92.0
+AM,Advanced playmaker,2324,4,James Maddison,Tottenham,88.0
+AM,Advanced playmaker,2324,5,Cole Palmer,Chelsea,84.0
+AM,Advanced playmaker,2223,1,Kevin De Bruyne,Manchester City,100.0
+AM,Advanced playmaker,2223,2,Rayan Cherki,Lyon,99.21259842519686
+AM,Advanced playmaker,2223,3,Florian Wirtz,Leverkusen,98.4251968503937
+AM,Advanced playmaker,2223,4,Neymar,Paris S-G,96.8503937007874
+AM,Advanced playmaker,2223,5,Suso,Sevilla,96.06299212598425
+AM,Channel midfielder,2425,1,Léo Scienza,Heidenheim,100.0
+AM,Channel midfielder,2425,2,Jamal Musiala,Bayern Munich,99.09909909909909
+AM,Channel midfielder,2425,3,Florian Wirtz,Leverkusen,98.1981981981982
+AM,Channel midfielder,2425,4,Sávio,Manchester City,97.2972972972973
+AM,Channel midfielder,2425,5,Gaetano Oristanio,Venezia,96.3963963963964
+AM,Channel midfielder,2324,1,Eberechi Eze,Crystal Palace,100.0
+AM,Channel midfielder,2324,2,Dejan Kulusevski,Tottenham,96.0
+AM,Channel midfielder,2324,3,Phil Foden,Manchester City,88.0
+AM,Channel midfielder,2324,4,Cole Palmer,Chelsea,84.0
+AM,Channel midfielder,2324,5,Marcus Tavernier,Bournemouth,80.0
+AM,Channel midfielder,2223,1,Romain Faivre,Lorient,100.0
+AM,Channel midfielder,2223,2,Rayan Cherki,Lyon,97.63779527559055
+AM,Channel midfielder,2223,3,Jamal Musiala,Bayern Munich,96.8503937007874
+AM,Channel midfielder,2223,4,Neymar,Paris S-G,96.06299212598425
+AM,Channel midfielder,2223,5,Nabil Fekir,Betis,95.2755905511811
+CB,Ball-playing CB,2425,1,Manuel Akanji,Manchester City,100.0
+CB,Ball-playing CB,2425,2,Dayot Upamecano,Bayern Munich,99.73614775725594
+CB,Ball-playing CB,2425,3,Pierre Kalulu,Juventus,99.47229551451187
+CB,Ball-playing CB,2425,4,Rúben Dias,Manchester City,99.2084432717678
+CB,Ball-playing CB,2425,5,Daley Blind,Girona,98.94459102902374
+CB,Ball-playing CB,2324,1,Manuel Akanji,Manchester City,100.0
+CB,Ball-playing CB,2324,2,Igor,Brighton,98.66666666666667
+CB,Ball-playing CB,2324,3,John Stones,Manchester City,97.33333333333334
+CB,Ball-playing CB,2324,4,Rúben Dias,Manchester City,96.0
+CB,Ball-playing CB,2324,5,Joško Gvardiol,Manchester City,94.66666666666667
+CB,Ball-playing CB,2223,1,Niklas Süle,Dortmund,100.0
+CB,Ball-playing CB,2223,2,Facundo Medina,Lens,99.74811083123426
+CB,Ball-playing CB,2223,3,John Stones,Manchester City,99.49622166246851
+CB,Ball-playing CB,2223,4,Danilo Pereira,Paris S-G,99.24433249370277
+CB,Ball-playing CB,2223,5,Eric García,Barcelona,98.99244332493703
+CB,No-nonsense CB,2425,1,Jubal,Auxerre,100.0
+CB,No-nonsense CB,2425,2,James Tarkowski,Everton,99.73614775725594
+CB,No-nonsense CB,2425,3,Andreas Hanche-Olsen,Mainz 05,99.47229551451187
+CB,No-nonsense CB,2425,4,Renato Veiga,Juventus,99.2084432717678
+CB,No-nonsense CB,2425,5,Pablo Marí,Fiorentina,98.94459102902374
+CB,No-nonsense CB,2324,1,James Tarkowski,Everton,98.66666666666667
+CB,No-nonsense CB,2324,2,Harry Maguire,Manchester Utd,97.33333333333334
+CB,No-nonsense CB,2324,3,Craig Dawson,Wolves,96.0
+CB,No-nonsense CB,2324,4,Virgil van Dijk,Liverpool,94.66666666666667
+CB,No-nonsense CB,2324,5,Jonny Evans,Manchester Utd,93.33333333333333
+CB,No-nonsense CB,2223,1,James Tarkowski,Everton,100.0
+CB,No-nonsense CB,2223,2,Rasmus Nicolaisen,Toulouse,99.74811083123426
+CB,No-nonsense CB,2223,3,Ethan Pinnock,Brentford,99.49622166246851
+CB,No-nonsense CB,2223,4,Przemysław Wiśniewski,Spezia,98.99244332493703
+CB,No-nonsense CB,2223,5,Boubakar Kouyaté,Montpellier,98.74055415617129
+CB,CB,2425,1,Clinton Mata,Lyon,100.0
+CB,CB,2425,2,José Luis Palomino,Cagliari,99.73614775725594
+CB,CB,2425,3,Tuta,Frankfurt,99.47229551451187
+CB,CB,2425,4,Enzo Boyomo,Osasuna,99.2084432717678
+CB,CB,2425,5,Yerry Mina,Cagliari,98.68073878627969
+CB,CB,2324,1,Levi Colwill,Chelsea,100.0
+CB,CB,2324,2,Jarell Quansah,Liverpool,98.66666666666667
+CB,CB,2324,3,Calvin Bassey,Fulham,97.33333333333334
+CB,CB,2324,4,Ibrahima Konaté,Liverpool,94.66666666666667
+CB,CB,2324,5,Benoît Badiashile,Chelsea,93.33333333333333
+CB,CB,2223,1,Leonardo Balerdi,Marseille,100.0
+CB,CB,2223,2,Konstantinos Mavropanos,Stuttgart,99.24433249370277
+CB,CB,2223,3,Liam Cooper,Leeds United,98.99244332493703
+CB,CB,2223,4,Sead Kolašinac,Marseille,98.74055415617129
+CB,CB,2223,5,Lucas Martínez Quarta,Fiorentina,98.48866498740554
+CB,Wide CB,2425,1,Daley Blind,Girona,100.0
+CB,Wide CB,2425,2,Joško Gvardiol,Manchester City,99.73614775725594
+CB,Wide CB,2425,3,Ramy Bensebaini,Dortmund,99.47229551451187
+CB,Wide CB,2425,4,Marcos Alonso,Celta Vigo,99.2084432717678
+CB,Wide CB,2425,5,Alessandro Bastoni,Inter,98.68073878627969
+CB,Wide CB,2324,1,Joško Gvardiol,Manchester City,100.0
+CB,Wide CB,2324,2,Joe Gomez,Liverpool,98.66666666666667
+CB,Wide CB,2324,3,Takehiro Tomiyasu,Arsenal,97.33333333333334
+CB,Wide CB,2324,4,Nathan Aké,Manchester City,96.0
+CB,Wide CB,2324,5,John Stones,Manchester City,94.66666666666667
+CB,Wide CB,2223,1,Jean-Kevin Duverne,Brest,100.0
+CB,Wide CB,2223,2,Mohamed Simakan,RB Leipzig,99.49622166246851
+CB,Wide CB,2223,3,Jonny Castro,Wolves,99.24433249370277
+CB,Wide CB,2223,4,Bafodé Diakité,Lille,98.99244332493703
+CB,Wide CB,2223,5,Benjamin Pavard,Bayern Munich,98.74055415617129
+CM,Box-to-box,2425,1,Fabián Ruiz Peña,Paris SG,100.0
+CM,Box-to-box,2425,2,João Neves,Paris SG,99.63503649635037
+CM,Box-to-box,2425,3,Adrien Thomasson,Lens,99.27007299270073
+CM,Box-to-box,2425,4,Leon Goretzka,Bayern Munich,98.54014598540147
+CM,Box-to-box,2425,5,Adrien Rabiot,Marseille,98.17518248175182
+CM,Box-to-box,2324,1,Curtis Jones,Liverpool,100.0
+CM,Box-to-box,2324,2,Conor Gallagher,Chelsea,97.77777777777777
+CM,Box-to-box,2324,3,Pape Matar Sarr,Tottenham,95.55555555555556
+CM,Box-to-box,2324,4,Ryan Christie,Bournemouth,93.33333333333333
+CM,Box-to-box,2324,5,Frank Onyeka,Brentford,91.11111111111111
+CM,Box-to-box,2223,1,Leon Goretzka,Bayern Munich,100.0
+CM,Box-to-box,2223,2,Joelinton,Newcastle Utd,99.64285714285714
+CM,Box-to-box,2223,3,Junior Dina Ebimbe,Eint Frankfurt,99.28571428571429
+CM,Box-to-box,2223,4,Pedri,Barcelona,98.92857142857143
+CM,Box-to-box,2223,5,Morgan Sanson,Strasbourg,98.57142857142858
+CM,Midfield playmaker,2425,1,Diego Moreira,Strasbourg,99.63503649635037
+CM,Midfield playmaker,2425,2,Andy Diouf,Lens,99.27007299270073
+CM,Midfield playmaker,2425,3,Khéphren Thuram,Juventus,98.90510948905109
+CM,Midfield playmaker,2425,4,Yunus Musah,Milan,98.54014598540147
+CM,Midfield playmaker,2425,5,Aron Dønnum,Toulouse,98.17518248175182
+CM,Midfield playmaker,2324,1,Keane Lewis-Potter,Brentford,100.0
+CM,Midfield playmaker,2324,2,Jean-Ricner Bellegarde,Wolves,97.77777777777777
+CM,Midfield playmaker,2324,3,Mateo Kovačić,Manchester City,95.55555555555556
+CM,Midfield playmaker,2324,4,Curtis Jones,Liverpool,93.33333333333333
+CM,Midfield playmaker,2324,5,Alex Scott,Bournemouth,88.88888888888889
+CM,Midfield playmaker,2223,1,Azzedine Ounahi,Angers,100.0
+CM,Midfield playmaker,2223,2,Jean-Ricner Bellegarde,Strasbourg,99.64285714285714
+CM,Midfield playmaker,2223,3,Seko Fofana,Lens,98.92857142857143
+CM,Midfield playmaker,2223,4,Josh Dasilva,Brentford,98.57142857142858
+CM,Midfield playmaker,2223,5,Khéphren Thuram,Nice,98.21428571428571
+CM,Deep-lying playmaker,2425,1,Dani Ceballos,Real Madrid,100.0
+CM,Deep-lying playmaker,2425,2,Leon Goretzka,Bayern Munich,99.27007299270073
+CM,Deep-lying playmaker,2425,3,Aleix García,Leverkusen,98.90510948905109
+CM,Deep-lying playmaker,2425,4,Frenkie de Jong,Barcelona,98.54014598540147
+CM,Deep-lying playmaker,2425,5,Daniel Parejo,Villarreal,98.17518248175182
+CM,Deep-lying playmaker,2324,1,Tommy Doyle,Wolves,100.0
+CM,Deep-lying playmaker,2324,2,Tom Cairney,Fulham,97.77777777777777
+CM,Deep-lying playmaker,2324,3,Pascal Groß,Brighton,95.55555555555556
+CM,Deep-lying playmaker,2324,4,Mateo Kovačić,Manchester City,93.33333333333333
+CM,Deep-lying playmaker,2324,5,Josh Cullen,Burnley,91.11111111111111
+CM,Deep-lying playmaker,2223,1,Marco Verratti,Paris S-G,100.0
+CM,Deep-lying playmaker,2223,2,Toni Kroos,Real Madrid,99.64285714285714
+CM,Deep-lying playmaker,2223,3,Florian Tardieu,Troyes,99.28571428571429
+CM,Deep-lying playmaker,2223,4,Frenkie de Jong,Barcelona,98.92857142857143
+CM,Deep-lying playmaker,2223,5,Dani Ceballos,Real Madrid,98.57142857142858
+CM,Advanced playmaker,2425,1,Rodrigo De Paul,Atlético Madrid,100.0
+CM,Advanced playmaker,2425,2,Arne Maier,Augsburg,99.27007299270073
+CM,Advanced playmaker,2425,3,Luis Henrique,Marseille,98.90510948905109
+CM,Advanced playmaker,2425,4,Nadiem Amiri,Mainz 05,98.54014598540147
+CM,Advanced playmaker,2425,5,Ludovic Blas,Rennes,98.17518248175182
+CM,Advanced playmaker,2324,1,Andreas Pereira,Fulham,100.0
+CM,Advanced playmaker,2324,2,Pascal Groß,Brighton,97.77777777777777
+CM,Advanced playmaker,2324,3,Tom Cairney,Fulham,95.55555555555556
+CM,Advanced playmaker,2324,4,Alfie Doughty,Luton Town,93.33333333333333
+CM,Advanced playmaker,2324,5,Mathias Jensen,Brentford,91.11111111111111
+CM,Advanced playmaker,2223,1,Piotr Zieliński,Napoli,100.0
+CM,Advanced playmaker,2223,2,Benjamin Bourigeaud,Rennes,99.64285714285714
+CM,Advanced playmaker,2223,3,Luka Modrić,Real Madrid,99.28571428571429
+CM,Advanced playmaker,2223,4,Antonio Candreva,Salernitana,98.92857142857143
+CM,Advanced playmaker,2223,5,Rodrigo De Paul,Atlético Madrid,98.57142857142858
+DM,Ball-winner,2425,1,Soungoutou Magassa,Monaco,100.0
+DM,Ball-winner,2425,2,Manuel Ugarte,Manchester Utd,99.34640522875817
+DM,Ball-winner,2425,3,Benjamin André,Lille,98.0392156862745
+DM,Ball-winner,2425,4,Tyler Adams,Bournemouth,97.38562091503267
+DM,Ball-winner,2425,5,Moisés Caicedo,Chelsea,96.73202614379085
+DM,Ball-winner,2324,1,Carlos Baleba,Brighton,100.0
+DM,Ball-winner,2324,2,João Palhinha,Fulham,96.875
+DM,Ball-winner,2324,3,Wataru Endo,Liverpool,93.75
+DM,Ball-winner,2324,4,Pierre Højbjerg,Tottenham,90.625
+DM,Ball-winner,2324,5,Casemiro,Manchester Utd,84.375
+DM,Ball-winner,2223,1,Benjamin André,Lille,100.0
+DM,Ball-winner,2223,2,Casemiro,Manchester Utd,99.375
+DM,Ball-winner,2223,3,Tom Krauß,Schalke 04,98.75
+DM,Ball-winner,2223,4,Mohamed Camara,Monaco,98.125
+DM,Ball-winner,2223,5,Johann Lepenant,Lyon,97.5
+DM,Deep-lying playmaker,2425,1,Joshua Kimmich,Bayern Munich,100.0
+DM,Deep-lying playmaker,2425,2,Manuel Locatelli,Juventus,99.34640522875817
+DM,Deep-lying playmaker,2425,3,Granit Xhaka,Leverkusen,98.69281045751634
+DM,Deep-lying playmaker,2425,4,Leandro Paredes,Roma,98.0392156862745
+DM,Deep-lying playmaker,2425,5,Vitinha,Paris SG,97.38562091503267
+DM,Deep-lying playmaker,2324,1,Rodri,Manchester City,100.0
+DM,Deep-lying playmaker,2324,2,Pierre Højbjerg,Tottenham,96.875
+DM,Deep-lying playmaker,2324,3,Sofyan Amrabat,Manchester Utd,93.75
+DM,Deep-lying playmaker,2324,4,Jorginho,Arsenal,90.625
+DM,Deep-lying playmaker,2324,5,Billy Gilmour,Brighton,87.5
+DM,Deep-lying playmaker,2223,1,Johan Gastien,Clermont Foot,100.0
+DM,Deep-lying playmaker,2223,2,Sofyan Amrabat,Fiorentina,99.375
+DM,Deep-lying playmaker,2223,3,Rodri,Manchester City,98.75
+DM,Deep-lying playmaker,2223,4,Azor Matusiwa,Reims,98.125
+DM,Deep-lying playmaker,2223,5,Pedro Chirivella,Nantes,97.5
+DM,Half-back,2425,1,Aurélien Tchouaméni,Real Madrid,98.69281045751634
+DM,Half-back,2425,2,Nemanja Gudelj,Sevilla,98.0392156862745
+DM,Half-back,2425,3,Stanko Jurić,Valladolid,96.73202614379085
+DM,Half-back,2425,4,Omar Mascarell,Mallorca,96.07843137254902
+DM,Half-back,2425,5,Edimilson Fernandes,Brest,94.77124183006535
+DM,Half-back,2324,1,Carlos Baleba,Brighton,100.0
+DM,Half-back,2324,2,Vinicius Souza,Sheffield United,96.875
+DM,Half-back,2324,3,Edson Álvarez,West Ham,93.75
+DM,Half-back,2324,4,Tomáš Souček,West Ham,90.625
+DM,Half-back,2324,5,João Palhinha,Fulham,87.5
+DM,Half-back,2223,1,Axel Witsel,Atlético Madrid,100.0
+DM,Half-back,2223,2,Nemanja Gudelj,Sevilla,99.375
+DM,Half-back,2223,3,Vlad Chiricheș,Cremonese,98.75
+DM,Half-back,2223,4,Bonke Innocent,Lorient,98.125
+DM,Half-back,2223,5,Wilfred Ndidi,Leicester City,97.5
+DM,Anchor,2425,1,Kaishū Sano,Mainz 05,100.0
+DM,Anchor,2425,2,Marc Casado,Barcelona,99.34640522875817
+DM,Anchor,2425,3,Carlos Baleba,Brighton,98.69281045751634
+DM,Anchor,2425,4,André,Wolves,98.0392156862745
+DM,Anchor,2425,5,Vitinha,Paris SG,97.38562091503267
+DM,Anchor,2324,1,Carlos Baleba,Brighton,100.0
+DM,Anchor,2324,2,Jorginho,Arsenal,96.875
+DM,Anchor,2324,3,Yves Bissouma,Tottenham,90.625
+DM,Anchor,2324,4,Moisés Caicedo,Chelsea,87.5
+DM,Anchor,2324,5,Cheick Doucouré,Crystal Palace,84.375
+DM,Anchor,2223,1,Salih Özcan,Dortmund,97.5
+DM,Anchor,2223,2,Roméo Lavia,Southampton,96.875
+DM,Anchor,2223,3,Asier Illarramendi,Real Sociedad,96.25
+DM,Anchor,2223,4,Sergio Busquets,Barcelona,95.625
+DM,Anchor,2223,5,Omar Mascarell,Elche,94.375
+FB,Overlapping wing-back,2425,1,Álex Grimaldo,Leverkusen,99.67741935483872
+FB,Overlapping wing-back,2425,2,Nuno Tavares,Lazio,99.35483870967742
+FB,Overlapping wing-back,2425,3,Caio Henrique,Monaco,99.03225806451613
+FB,Overlapping wing-back,2425,4,Maximilian Mittelstädt,Stuttgart,98.70967741935483
+FB,Overlapping wing-back,2425,5,Achraf Hakimi,Paris SG,98.06451612903226
+FB,Overlapping wing-back,2324,1,Pervis Estupiñán,Brighton,98.14814814814815
+FB,Overlapping wing-back,2324,2,Malo Gusto,Chelsea,96.29629629629629
+FB,Overlapping wing-back,2324,3,Trent Alexander-Arnold,Liverpool,90.74074074074075
+FB,Overlapping wing-back,2324,4,Sergio Reguilón,Brentford,88.88888888888889
+FB,Overlapping wing-back,2324,5,Antonee Robinson,Fulham,85.18518518518519
+FB,Overlapping wing-back,2223,1,Malo Gusto,Lyon,100.0
+FB,Overlapping wing-back,2223,2,Aleksa Terzić,Fiorentina,99.67948717948718
+FB,Overlapping wing-back,2223,3,Borna Sosa,Stuttgart,99.35897435897436
+FB,Overlapping wing-back,2223,4,Jordi Alba,Barcelona,98.71794871794873
+FB,Overlapping wing-back,2223,5,Mário Rui,Napoli,98.3974358974359
+FB,Inverted full-back,2425,1,Alphonso Davies,Bayern Munich,99.35483870967742
+FB,Inverted full-back,2425,2,Kyle Walker,Manchester City,99.03225806451613
+FB,Inverted full-back,2425,3,Konrad Laimer,Bayern Munich,98.70967741935483
+FB,Inverted full-back,2425,4,Lutsharel Geertruida,RB Leipzig,98.38709677419355
+FB,Inverted full-back,2425,5,Michael Amir Murillo,Marseille,98.06451612903226
+FB,Inverted full-back,2324,1,Oleksandr Zinchenko,Arsenal,100.0
+FB,Inverted full-back,2324,2,Emerson,Tottenham,98.14814814814815
+FB,Inverted full-back,2324,3,Kyle Walker,Manchester City,96.29629629629629
+FB,Inverted full-back,2324,4,Destiny Udogie,Tottenham,92.5925925925926
+FB,Inverted full-back,2324,5,Ben White,Arsenal,90.74074074074075
+FB,Inverted full-back,2223,1,Kyle Walker,Manchester City,100.0
+FB,Inverted full-back,2223,2,Jules Koundé,Barcelona,99.67948717948718
+FB,Inverted full-back,2223,3,Oleksandr Zinchenko,Arsenal,99.35897435897436
+FB,Inverted full-back,2223,4,Alphonso Davies,Bayern Munich,99.03846153846155
+FB,Inverted full-back,2223,5,Rico Lewis,Manchester City,99.03846153846155
+FB,Full-back,2425,1,Wilfried Singo,Monaco,100.0
+FB,Full-back,2425,2,Noussair Mazraoui,Manchester Utd,99.03225806451613
+FB,Full-back,2425,3,Guéla Doué,Strasbourg,98.38709677419355
+FB,Full-back,2425,4,Adam Obert,Cagliari,98.06451612903226
+FB,Full-back,2425,5,Bernardo,Bochum,97.74193548387096
+FB,Full-back,2324,1,Joël Veltman,Brighton,100.0
+FB,Full-back,2324,2,Aaron Wan-Bissaka,Manchester Utd,98.14814814814815
+FB,Full-back,2324,3,Marc Cucurella,Chelsea,94.44444444444444
+FB,Full-back,2324,4,Destiny Udogie,Tottenham,92.5925925925926
+FB,Full-back,2324,5,Tyrick Mitchell,Crystal Palace,90.74074074074075
+FB,Full-back,2223,1,Reinildo Mandava,Atlético Madrid,100.0
+FB,Full-back,2223,2,Danilo Soares,Bochum,99.67948717948718
+FB,Full-back,2223,3,Konrad Laimer,RB Leipzig,99.35897435897436
+FB,Full-back,2223,4,Youssouf Koné,Ajaccio,99.03846153846155
+FB,Full-back,2223,5,Bradley Locko,Reims,98.71794871794873
+ST,Poacher,2425,1,Cristhian Stuani,Girona,100.0
+ST,Poacher,2425,2,Emanuel Emegha,Strasbourg,99.57446808510639
+ST,Poacher,2425,3,Gonçalo Ramos,Paris SG,99.14893617021276
+ST,Poacher,2425,4,Mika Biereth,Monaco,98.72340425531915
+ST,Poacher,2425,5,Myron Boadu,Bochum,97.87234042553192
+ST,Poacher,2324,1,Erling Haaland,Manchester City,100.0
+ST,Poacher,2324,2,Elijah Adebayo,Luton Town,97.43589743589743
+ST,Poacher,2324,3,Jean-Philippe Mateta,Crystal Palace,94.87179487179486
+ST,Poacher,2324,4,Ollie Watkins,Aston Villa,92.3076923076923
+ST,Poacher,2324,5,Darwin Núñez,Liverpool,89.74358974358975
+ST,Poacher,2223,1,Callum Wilson,Newcastle Utd,100.0
+ST,Poacher,2223,2,Loïs Openda,Lens,99.61685823754789
+ST,Poacher,2223,3,Victor Osimhen,Napoli,99.23371647509579
+ST,Poacher,2223,4,Elye Wahi,Montpellier,98.46743295019157
+ST,Poacher,2223,5,Erling Haaland,Manchester City,98.08429118773945
+ST,Target man,2425,1,Jonas Wind,Wolfsburg,100.0
+ST,Target man,2425,2,Philipp Hofmann,Bochum,99.57446808510639
+ST,Target man,2425,3,Juanmi Latasa,Valladolid,99.14893617021276
+ST,Target man,2425,4,Vedat Muriqi,Mallorca,98.72340425531915
+ST,Target man,2425,5,Milan Đurić,Monza,97.87234042553192
+ST,Target man,2324,1,Oliver McBurnie,Sheffield United,100.0
+ST,Target man,2324,2,Ivan Toney,Brentford,97.43589743589743
+ST,Target man,2324,3,Kai Havertz,Arsenal,94.87179487179486
+ST,Target man,2324,4,Rodrigo Muniz,Fulham,92.3076923076923
+ST,Target man,2324,5,Raúl Jiménez,Fulham,89.74358974358975
+ST,Target man,2223,1,Milan Đurić,Hellas Verona,100.0
+ST,Target man,2223,2,Kieffer Moore,Bournemouth,99.61685823754789
+ST,Target man,2223,3,Ludovic Ajorque,Mainz 05,99.23371647509579
+ST,Target man,2223,4,Joselu,Espanyol,98.85057471264368
+ST,Target man,2223,5,Philipp Hofmann,Bochum,98.46743295019157
+ST,False 9,2425,1,Isaac Palazón Camacho,Rayo Vallecano,100.0
+ST,False 9,2425,2,Iago Aspas,Celta Vigo,99.57446808510639
+ST,False 9,2425,3,Paulo Dybala,Roma,99.14893617021276
+ST,False 9,2425,4,Matheus Cunha,Wolves,98.29787234042553
+ST,False 9,2425,5,Giacomo Raspadori,Napoli,97.87234042553192
+ST,False 9,2324,1,Julián Álvarez,Manchester City,100.0
+ST,False 9,2324,2,João Pedro,Brighton,97.43589743589743
+ST,False 9,2324,3,Matheus Cunha,Wolves,94.87179487179486
+ST,False 9,2324,4,Kai Havertz,Arsenal,92.3076923076923
+ST,False 9,2324,5,Danny Welbeck,Brighton,89.74358974358975
+ST,False 9,2223,1,Paulo Dybala,Roma,100.0
+ST,False 9,2223,2,Antoine Griezmann,Atlético Madrid,99.61685823754789
+ST,False 9,2223,3,Luis Muriel,Atalanta,99.23371647509579
+ST,False 9,2223,4,Florian Sotoca,Lens,98.85057471264368
+ST,False 9,2223,5,Alassane Pléa,M'Gladbach,98.46743295019157
+ST,Channel runner,2425,1,Moise Kean,Fiorentina,100.0
+ST,Channel runner,2425,2,Kylian Mbappé,Real Madrid,99.14893617021276
+ST,Channel runner,2425,3,Hugo Ekitike,Frankfurt,98.72340425531915
+ST,Channel runner,2425,4,Ayoze Pérez,Villarreal,98.29787234042553
+ST,Channel runner,2425,5,Alexander Isak,Newcastle,97.87234042553192
+ST,Channel runner,2324,1,Darwin Núñez,Liverpool,100.0
+ST,Channel runner,2324,2,Beto,Everton,97.43589743589743
+ST,Channel runner,2324,3,Ollie Watkins,Aston Villa,94.87179487179486
+ST,Channel runner,2324,4,Nicolas Jackson,Chelsea,92.3076923076923
+ST,Channel runner,2324,5,Gabriel Jesus,Arsenal,87.17948717948718
+ST,Channel runner,2223,1,Folarin Balogun,Reims,100.0
+ST,Channel runner,2223,2,Darwin Núñez,Liverpool,99.61685823754789
+ST,Channel runner,2223,3,Victor Osimhen,Napoli,99.23371647509579
+ST,Channel runner,2223,4,Loïs Openda,Lens,98.85057471264368
+ST,Channel runner,2223,5,Moise Kean,Juventus,98.46743295019157
+W,Traditional winger,2425,1,Junya Itō,Reims,100.0
+W,Traditional winger,2425,2,Bryan Zaragoza,Osasuna,99.57805907172997
+W,Traditional winger,2425,3,Dwight McNeil,Everton,99.15611814345992
+W,Traditional winger,2425,4,Iván Sánchez,Valladolid,98.73417721518987
+W,Traditional winger,2425,5,Antoine Joujou,Le Havre,98.31223628691983
+W,Traditional winger,2324,1,Pedro Neto,Wolves,100.0
+W,Traditional winger,2324,2,Jeremy Doku,Manchester City,97.5609756097561
+W,Traditional winger,2324,3,Dwight McNeil,Everton,95.1219512195122
+W,Traditional winger,2324,4,Michael Olise,Crystal Palace,95.1219512195122
+W,Traditional winger,2324,5,Mohammed Kudus,West Ham,90.2439024390244
+W,Traditional winger,2223,1,Ángel Di María,Juventus,99.09502262443439
+W,Traditional winger,2223,2,Michael Olise,Crystal Palace,98.64253393665159
+W,Traditional winger,2223,3,Adama Traoré,Wolves,98.19004524886877
+W,Traditional winger,2223,4,Kike Barja,Osasuna,98.19004524886877
+W,Traditional winger,2223,5,Adam Ounas,Lille,97.28506787330316
+W,Inside forward,2425,1,Luis Díaz,Liverpool,100.0
+W,Inside forward,2425,2,Mohamed Salah,Liverpool,99.57805907172997
+W,Inside forward,2425,3,Vinicius Júnior,Real Madrid,99.15611814345992
+W,Inside forward,2425,4,Noni Madueke,Chelsea,98.73417721518987
+W,Inside forward,2425,5,Karim Adeyemi,Dortmund,98.31223628691983
+W,Inside forward,2324,1,Luis Díaz,Liverpool,97.5609756097561
+W,Inside forward,2324,2,Alejandro Garnacho,Manchester Utd,95.1219512195122
+W,Inside forward,2324,3,Diogo Jota,Liverpool,92.6829268292683
+W,Inside forward,2324,4,Raheem Sterling,Chelsea,90.2439024390244
+W,Inside forward,2324,5,Jeremy Doku,Manchester City,87.8048780487805
+W,Inside forward,2223,1,Rodrygo,Real Madrid,100.0
+W,Inside forward,2223,2,Vinicius Júnior,Real Madrid,99.5475113122172
+W,Inside forward,2223,3,Ansu Fati,Barcelona,99.09502262443439
+W,Inside forward,2223,4,Luis Díaz,Liverpool,98.64253393665159
+W,Inside forward,2223,5,Kaoru Mitoma,Brighton,98.19004524886877
+W,Wide playmaker,2425,1,Thiago Almada,Lyon,100.0
+W,Wide playmaker,2425,2,Vincenzo Grifo,Freiburg,99.57805907172997
+W,Wide playmaker,2425,3,Álex Baena,Villarreal,99.15611814345992
+W,Wide playmaker,2425,4,Michael Olise,Bayern Munich,98.73417721518987
+W,Wide playmaker,2425,5,Raphinha,Barcelona,98.31223628691983
+W,Wide playmaker,2324,1,Willian,Fulham,100.0
+W,Wide playmaker,2324,2,Son Heung-min,Tottenham,97.5609756097561
+W,Wide playmaker,2324,3,Jóhann Berg Guðmundsson,Burnley,95.1219512195122
+W,Wide playmaker,2324,4,Jack Grealish,Manchester City,92.6829268292683
+W,Wide playmaker,2324,5,Alex Iwobi,Fulham,90.2439024390244
+W,Wide playmaker,2223,1,Riyad Mahrez,Manchester City,100.0
+W,Wide playmaker,2223,2,Domenico Berardi,Sassuolo,99.5475113122172
+W,Wide playmaker,2223,3,Raphinha,Barcelona,99.09502262443439
+W,Wide playmaker,2223,4,Leandro Trossard,Arsenal,98.64253393665159
+W,Wide playmaker,2223,5,Jack Grealish,Manchester City,97.73755656108597
+W,1v1 dribbler,2425,1,Jeremy Doku,Manchester City,100.0
+W,1v1 dribbler,2425,2,Lamine Yamal,Barcelona,99.57805907172997
+W,1v1 dribbler,2425,3,Chidera Ejuke,Sevilla,99.15611814345992
+W,1v1 dribbler,2425,4,Jamie Gittens,Dortmund,98.73417721518987
+W,1v1 dribbler,2425,5,Takefusa Kubo,Real Sociedad,98.31223628691983
+W,1v1 dribbler,2324,1,Jeremy Doku,Manchester City,100.0
+W,1v1 dribbler,2324,2,Mohammed Kudus,West Ham,97.5609756097561
+W,1v1 dribbler,2324,3,Chiedozie Ogbene,Luton Town,95.1219512195122
+W,1v1 dribbler,2324,4,Michael Olise,Crystal Palace,95.1219512195122
+W,1v1 dribbler,2324,5,Noni Madueke,Chelsea,87.8048780487805
+W,1v1 dribbler,2223,1,Jeremy Doku,Rennes,100.0
+W,1v1 dribbler,2223,2,Abdessamad Ezzalzouli,Osasuna,99.09502262443439
+W,1v1 dribbler,2223,3,Allan Saint-Maximin,Newcastle Utd,97.73755656108597
+W,1v1 dribbler,2223,4,Iván Sánchez,Valladolid,97.28506787330316
+W,1v1 dribbler,2223,5,Rodrygo,Real Madrid,96.83257918552036

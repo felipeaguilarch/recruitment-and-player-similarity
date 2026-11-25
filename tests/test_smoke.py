@@ -56,6 +56,31 @@ def test_value_model_stats_exist():
         assert not unknown, f"value model asks for unknown features: {unknown}"
 
 
+def test_every_role_stat_exists():
+        """A typo in config.ROLES would otherwise only surface as a log warning."""
+        known = (set(config.FEATURES) | set(config.ROLE_RATIOS) | set(config.ROLE_SHARES)
+                 | set(config.ROLE_POSSESSION_ADJUSTED))
+        for group, roles in config.ROLES.items():
+                for role in roles:
+                        unknown = [stat for stat in role.stats() if stat not in known]
+                        assert not unknown, f"{group} / {role.name} uses unknown stats: {unknown}"
+        for name, (numerator, other, _label) in config.ROLE_RATIOS.items():
+                assert numerator in config.FEATURES and other in config.FEATURES, name
+        for name, (part, whole, _label) in config.ROLE_SHARES.items():
+                assert part in config.FEATURES and whole in config.FEATURES, name
+        for name, (stat, _label) in config.ROLE_POSSESSION_ADJUSTED.items():
+                assert stat in config.FEATURES and not config.FEATURES[stat].padj, name
+
+
+def test_every_position_group_has_distinct_roles():
+        assert set(config.ROLES) == set(config.POSITION_GROUPS)
+        for group, roles in config.ROLES.items():
+                names = [role.name for role in roles]
+                assert len(names) >= 2 and len(set(names)) == len(names), group
+                for role in roles:
+                        assert len(role.stats()) == len(set(role.stats())), f"{group} / {role.name} repeats a stat"
+
+
 def test_name_match_thresholds_are_ordered():
         assert config.NAME_MATCH_REJECT < config.NAME_MATCH_ACCEPT
 
@@ -429,3 +454,113 @@ def test_own_season_ranks_ignore_a_second_row_in_the_same_season():
         }}
         seasons = {"A__2425__X": "2425", "A__2425__Y": "2425", "B__2425__Z": "2425"}
         assert own_season_ranks(models, seasons).empty
+
+
+# --- playing roles -----------------------------------------------------------
+
+
+def _role_frame(**stats):
+        """One CB season with the given stat columns."""
+        n = len(next(iter(stats.values())))
+        return pd.DataFrame({
+                "player_season_id": [f"P{i}" for i in range(n)],
+                "position_group": "CB",
+                "season": "2425",
+                **stats,
+        })
+
+
+def test_role_stat_directions():
+        from src.roles import stat_scores
+
+        pct = pd.Series([0.0, 50.0, 100.0])
+        assert stat_scores(pct, "high").tolist() == [0, 50, 100]
+        assert stat_scores(pct, "low").tolist() == [100, 50, 0]
+        assert stat_scores(pct, "middle").tolist() == [0, 100, 0]
+
+
+def test_role_scores_follow_high_low_and_middle(monkeypatch):
+        from src import roles
+
+        monkeypatch.setattr(config, "ROLES", {"CB": [
+                config.Role("Passer", high=("prog_passes",)),
+                config.Role("Stopper", high=("clearances",), low=("prog_passes",)),
+                config.Role("Average", middle=("prog_passes",)),
+        ]})
+        frame = _role_frame(prog_passes=[1.0, 5.0, 9.0], clearances=[9.0, 5.0, 1.0])
+        scores = roles.score_roles(frame).pivot(index="player_season_id", columns="role", values="score")
+
+        assert scores["Passer"].idxmax() == "P2"
+        assert scores["Stopper"].idxmax() == "P0"
+        assert scores["Average"].idxmax() == "P1"
+        assert scores.min().min() > 0 and scores.max().max() == 100
+
+
+def test_role_ratios_skip_players_with_nothing_to_divide():
+        from src.roles import add_ratios
+
+        frame = add_ratios(pd.DataFrame({"prog_passes": [3.0, 0.0], "prog_carries": [1.0, 0.0],
+                                         "npxg": [0.2, 0.1], "xa": [0.2, 0.3]}))
+        assert frame["pass_share"].iloc[0] == 0.75
+        assert pd.isna(frame["pass_share"].iloc[1])
+        assert frame["shot_share"].tolist() == [0.5, 0.25]
+
+
+def test_role_shares_skip_players_with_no_touches():
+        from src.roles import add_ratios
+
+        frame = add_ratios(pd.DataFrame({"touches_att_box": [5.0, 0.0], "touches": [50.0, 0.0]}))
+        assert frame["touches_att_box_share"].iloc[0] == 0.1
+        assert pd.isna(frame["touches_att_box_share"].iloc[1])
+
+
+def test_possession_adjusted_volume_scales_to_fifty_percent():
+        from src.roles import add_ratios
+
+        frame = add_ratios(pd.DataFrame({"passes_attempted": [60.0, 60.0, 60.0],
+                                         "team_possession": [50.0, 25.0, np.nan]}))
+        # Neutral team unchanged, a 25% team doubled, unknown possession left alone.
+        assert frame["passes_attempted_poss_adj"].tolist() == [60.0, 120.0, 60.0]
+
+
+def test_best_roles_labels_hybrids_and_breaks_ties_by_config_order():
+        from src.roles import best_roles
+
+        scores = pd.DataFrame({
+                "player_season_id": ["A", "A", "A", "B", "B"],
+                "position_group": "CM", "season": "2425",
+                "role": ["X", "Y", "Z", "Y", "X"],
+                "role_order": [0, 1, 2, 1, 0],
+                "score": [90.0, 87.0, 10.0, 60.0, 60.0],
+        })
+        out = best_roles(scores, margin=5).set_index("player_season_id")
+
+        assert out.loc["A", "primary_role"] == "X" and out.loc["A", "hybrid"]
+        assert out.loc["A", "role_label"] == "X / Y"
+        # A dead heat goes to the role listed first, whatever the row order.
+        assert out.loc["B", "primary_role"] == "X"
+
+
+def test_role_stability_compares_a_players_consecutive_seasons():
+        from src.roles import role_stability
+
+        roles = pd.DataFrame({
+                "player_season_id": ["A1", "A2", "A3", "B1", "B2"],
+                "position_group": "CB",
+                "season": ["2223", "2324", "2425", "2223", "2425"],
+                "primary_role": ["Stopper", "Stopper", "Passer", "Passer", "Stopper"],
+                "secondary_role": ["Passer", "Passer", "Stopper", "Stopper", "Passer"],
+                "hybrid": [False, False, True, False, False],
+        })
+        identity = pd.DataFrame({
+                "player_season_id": ["A1", "A2", "A3", "B1", "B2"],
+                "player": ["A", "A", "A", "B", "B"],
+                "tm_player_id": [1.0, 1.0, 1.0, np.nan, np.nan],
+        })
+        cb = role_stability(roles, identity).set_index("position_group").loc["CB"]
+
+        # Pairs: A1-A2 the same; A2-A3 differ but A3 is a Passer / Stopper
+        # hybrid; B1-B2 differ outright.
+        assert cb["pairs"] == 3
+        assert cb["same_primary"] == round(1 / 3, 3)
+        assert cb["same_any"] == round(2 / 3, 3)

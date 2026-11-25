@@ -4,7 +4,7 @@
 after that wait is miserable, so this builds a player-season table with the
 same *shape* as the real one - FBref-style flattened column names, a plausible
 spread of positions, ages, minutes and market values - and pushes it through
-features -> similarity -> value -> figures for real.
+features -> roles -> similarity -> value -> figures for real.
 
 It verifies plumbing, not football: that feature resolution finds the columns,
 that per-90 and possession adjustment produce finite numbers, that PCA and the
@@ -145,6 +145,7 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
         from src import features as features_mod
         from src import figures as figures_mod
         from src import paths as paths_mod
+        from src import roles as roles_mod
         from src import similarity as similarity_mod
         from src import value_model as value_mod
 
@@ -161,6 +162,10 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
                 "SIMILARITY": root / "processed/similarity.parquet",
                 "STYLE_MAP": root / "processed/style_map.parquet",
                 "VALUE_PREDICTIONS": root / "processed/value_predictions.parquet",
+                "ROLES": root / "processed/roles.parquet",
+                "ROLE_SCORES": root / "processed/role_scores.parquet",
+                "ROLE_STABILITY": root / "reports/role_stability.csv",
+                "ROLE_TOP_PLAYERS": root / "reports/role_top_players.csv",
                 "SIMILARITY_MODELS": root / "artifacts/similarity_models.joblib",
                 "VALUE_MODEL": root / "artifacts/value_model.joblib",
                 "FEATURE_RESOLUTION": root / "reports/feature_resolution.csv",
@@ -180,6 +185,7 @@ def pipeline(tmp_path_factory, synthetic_player_seasons):
                 synthetic_player_seasons.to_parquet(paths_mod.PLAYER_SEASONS, index=False)
                 stages = [
                         ("features", lambda: features_mod.run(force=True)),
+                        ("roles", lambda: roles_mod.run(force=True)),
                         ("similarity", lambda: similarity_mod.run(force=True)),
                         ("value", lambda: value_mod.run(force=True)),
                         ("figures", lambda: _run_figures(figures_mod)),
@@ -239,6 +245,28 @@ def test_percentiles_span_zero_to_one_hundred(pipeline):
 def test_every_group_has_percentiles(pipeline):
         percentiles = pd.read_parquet(pipeline.PERCENTILES)
         assert set(percentiles["position_group"]) == set(config.POSITION_GROUPS)
+
+
+# --- roles -----------------------------------------------------------------
+
+
+def test_every_player_season_gets_a_role_from_its_group(pipeline):
+        needs("roles")
+        features = pd.read_parquet(pipeline.FEATURES)
+        roles = pd.read_parquet(pipeline.ROLES)
+        assert set(roles["player_season_id"]) == set(features["player_season_id"])
+        for group, rows in roles.groupby("position_group"):
+                names = {role.name for role in config.ROLES[group]}
+                assert set(rows["primary_role"]) <= names, group
+        assert roles["primary_score"].between(0, 100).all()
+        assert (roles["primary_score"] >= roles["secondary_score"]).all()
+
+
+def test_role_reports_written(pipeline):
+        needs("roles")
+        stability = pd.read_csv(pipeline.ROLE_STABILITY)
+        assert "All" in set(stability["position_group"])
+        assert len(pd.read_csv(pipeline.ROLE_TOP_PLAYERS)) > 0
 
 
 # --- similarity ------------------------------------------------------------

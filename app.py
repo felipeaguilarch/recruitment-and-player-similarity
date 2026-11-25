@@ -49,6 +49,7 @@ def require_pipeline() -> None:
                 "percentiles": paths.PERCENTILES,
                 "comparables": paths.SIMILARITY,
                 "value predictions": paths.VALUE_PREDICTIONS,
+                "roles": paths.ROLES,
         }
         missing = {name: path for name, path in needed.items() if not path.exists()}
         if not missing:
@@ -69,6 +70,8 @@ features = load_table(str(paths.FEATURES))
 percentiles = load_table(str(paths.PERCENTILES))
 comps = load_table(str(paths.SIMILARITY))
 values = load_table(str(paths.VALUE_PREDICTIONS))
+roles = load_table(str(paths.ROLES))
+role_scores = load_table(str(paths.ROLE_SCORES)) if paths.ROLE_SCORES.exists() else None
 style = load_table(str(paths.STYLE_MAP)) if paths.STYLE_MAP.exists() else None
 
 # One frame the whole app reads from. Merging value predictions onto features
@@ -76,6 +79,11 @@ style = load_table(str(paths.STYLE_MAP)) if paths.STYLE_MAP.exists() else None
 players = features.merge(
         values[["player_season_id", "predicted_value_eur", "log_residual",
                         "value_ratio", "undervalued"]],
+        on="player_season_id",
+        how="left",
+).merge(
+        roles[["player_season_id", "primary_role", "primary_score", "secondary_role",
+               "secondary_score", "hybrid", "role_label"]],
         on="player_season_id",
         how="left",
 )
@@ -106,6 +114,17 @@ available_groups = [
         if group in set(players["position_group"].dropna())
 ]
 group = st.sidebar.selectbox("Position group", available_groups)
+
+# Options change with the group, and Streamlit treats a widget with different
+# options as a new widget - so switching group resets this to "all roles".
+group_roles = [role.name for role in config.ROLES.get(group, [])]
+selected_roles = st.sidebar.multiselect(
+        "Roles",
+        group_roles,
+        default=group_roles,
+        help="Candidates' best-fit playing role. A hybrid (two roles within "
+             f"{config.ROLE_HYBRID_MARGIN:.0f} points of each other) matches either.",
+)
 
 available_seasons = sorted(
         players["season"].dropna().astype(str).unique(),
@@ -209,6 +228,14 @@ def apply_filters(frame: pd.DataFrame) -> pd.DataFrame:
         budget_low, budget_high = (bound * 1e6 for bound in budget_range_m)
         result = result[actual_value.between(budget_low, budget_high).fillna(False)]
 
+        # A hybrid counts as both of its roles, so a "Box-to-box / Midfield
+        # playmaker" survives a filter on either.
+        in_role = result["primary_role"].isin(selected_roles) | (
+                result["hybrid"].fillna(False).astype(bool)
+                & result["secondary_role"].isin(selected_roles)
+        )
+        result = result[in_role]
+
         if exclude_fallback:
                 result = result[result["position_source"] != "fbref_fallback"]
 
@@ -232,8 +259,8 @@ st.sidebar.caption(
 # ---------------------------------------------------------------------------
 st.title("Player recruitment & similarity")
 
-# Search uses position and season only. Budget, age, minutes and league filters
-# describe the replacement pool, not the player being replaced.
+# Search uses position and season only. Role, budget, age, minutes and league
+# filters describe the replacement pool, not the player being replaced.
 search_base = players[
         (players["position_group"] == group)
         & (players["season"].astype(str) == season)].copy()
@@ -276,6 +303,56 @@ target = players.loc[players["player_season_id"] == selected_id].iloc[0]
 st.subheader(str(target["player"]))
 name_caption = f"{target['team']} · {target['league']} · {season_label(target['season'])}"
 st.caption(name_caption)
+
+
+def role_definition(role: config.Role) -> str:
+        """"↑ Prog. Passes, Pass Completion % · ↓ Clearances" for one role."""
+        def label(stat: str) -> str:
+                if stat in config.ROLE_RATIOS:
+                        return config.ROLE_RATIOS[stat][2]
+                if stat in config.ROLE_SHARES:
+                        return config.ROLE_SHARES[stat][2]
+                if stat in config.ROLE_POSSESSION_ADJUSTED:
+                        return config.ROLE_POSSESSION_ADJUSTED[stat][1]
+                feature = config.FEATURES.get(stat)
+                return feature.display() if feature is not None else stat.replace("_", " ")
+
+        parts = []
+        for arrow, stats in (("↑", role.high), ("↓", role.low), ("≈ median", role.middle)):
+                if stats:
+                        parts.append(f"{arrow} " + ", ".join(label(stat) for stat in stats))
+        return " · ".join(parts)
+
+
+# Role line: the best-fit role, plus the runner-up when it is close enough to
+# make him a hybrid. Scores are percentiles among his group and season.
+if pd.notna(target.get("primary_role")):
+        role_line = f"**Role:** {target['primary_role']} ({target['primary_score']:.0f})"
+        if bool(target["hybrid"]) and pd.notna(target["secondary_role"]):
+                role_line += f" / {target['secondary_role']} ({target['secondary_score']:.0f})"
+        st.markdown(role_line)
+
+        if role_scores is not None:
+                with st.expander("How he fits each role"):
+                        own = role_scores[role_scores["player_season_id"] == selected_id].set_index("role")["score"]
+                        role_table = pd.DataFrame([
+                                {"Role": role.name, "Score": own.get(role.name, np.nan),
+                                 "Based on": role_definition(role)}
+                                for role in config.ROLES.get(group, [])
+                        ]).sort_values("Score", ascending=False)
+                        st.dataframe(
+                                role_table,
+                                hide_index=True,
+                                width="stretch",
+                                column_config={"Score": st.column_config.ProgressColumn(
+                                        "Score", min_value=0, max_value=100, format="%.0f")},
+                        )
+                        st.caption(
+                                "Each score is a percentile among his position group in the same "
+                                "season: the role's stats are percentile-ranked, averaged (↓ stats "
+                                "count low values, ≈ median stats count being average), and the "
+                                "average is ranked again so every role shares one scale."
+                        )
 
 
 def value_verdict(row: pd.Series) -> tuple[str, str, str]:
@@ -348,7 +425,7 @@ target_comps = target_comps[
 ].copy()
 
 # Every remaining comparable is in the pool, so a plain merge finds them all.
-comp_details = pool[["player_season_id", "player", "team", "season", "market_value_eur"]].rename(
+comp_details = pool[["player_season_id", "player", "team", "season", "role_label", "market_value_eur"]].rename(
         columns={"player_season_id": "comp_player_season_id"})
 comp_details["comp_player_season_id"] = comp_details["comp_player_season_id"].astype(str)
 target_comps["comp_player_season_id"] = target_comps["comp_player_season_id"].astype(str)
@@ -406,10 +483,10 @@ with right:
         if target_comps.empty:
                 st.info(
                         "No comparable players remain in the filtered pool. "
-                        "Loosen the budget, minutes, age, league or candidate-season filters."
+                        "Loosen the role, budget, minutes, age, league or candidate-season filters."
                 )
         else:
-                table = target_comps[["rank", "player", "team", "season", "similarity"]].copy()
+                table = target_comps[["rank", "player", "team", "season", "role_label", "similarity"]].copy()
                 table["season"] = table["season"].map(season_label)
                 # In millions: "€45000000" is unreadable in a table cell.
                 table["value_m"] = target_comps["market_value_eur"] / 1e6
@@ -418,6 +495,7 @@ with right:
                         "player": "Player",
                         "team": "Club",
                         "season": "Season",
+                        "role_label": "Role",
                         "similarity": "Similarity",
                         "value_m": "Market value",
                 })

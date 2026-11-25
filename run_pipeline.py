@@ -17,8 +17,9 @@ Cold-start cost, roughly:
     fetch-tm-contracts   1-2 min      seven ~1-5 MB snapshots
     merge                5-7 min      the fuzzy name join and club check dominate
     features             < 1 min
-    similarity           1-2 min      UMAP is the slow part
-    value                1-3 min      cross-validation x 2 models
+    roles                < 1 min
+    similarity           < 1 min      UMAP is the slow part
+    value                < 1 min      cross-validation x 2 models
     figures              < 1 min
 
 Only `fetch-fbref` is genuinely expensive, and soccerdata caches the raw HTML
@@ -42,6 +43,7 @@ STAGES: list[tuple[str, str]] = [
         ("fetch-tm-contracts", "Dated contract observations from the raw TM scrapes"),
         ("merge", "Join the two sources into one player-season table"),
         ("features", "Per-90, possession-adjust, percentile-rank"),
+        ("roles", "Score every player-season against its group's playing roles"),
         ("similarity", "Fit PCA + cosine kNN per position group"),
         ("value", "Fit the expected-value model, flag undervalued players"),
         ("figures", "Rebuild the README figures in assets/"),
@@ -71,6 +73,9 @@ def run_stage(name: str, force: bool) -> None:
         elif name == "features":
                 from src import features
                 features.run(force=force)
+        elif name == "roles":
+                from src import roles
+                roles.run(force=force)
         elif name == "similarity":
                 from src import similarity
                 similarity.run(force=force)

@@ -388,6 +388,194 @@ GROUP_SPECS: dict[str, GroupSpec] = {
 
 
 # ---------------------------------------------------------------------------
+# Playing roles
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Role:
+        """One playing role, defined by which percentiles count for it.
+
+        high:   a high percentile counts in the role's favour.
+        low:    a low percentile counts in its favour (scored as 100 - pct).
+        middle: being near the median counts - 100 at the 50th percentile,
+                0 at either extreme. For "neither good nor bad at X".
+
+        Any catalogue feature can be used, or a ratio from ROLE_RATIOS, a
+        share from ROLE_SHARES or a stat from ROLE_POSSESSION_ADJUSTED.
+        """
+
+        name: str
+        high: tuple[str, ...] = ()
+        low: tuple[str, ...] = ()
+        middle: tuple[str, ...] = ()
+
+        def stats(self) -> tuple[str, ...]:
+                return (*self.high, *self.low, *self.middle)
+
+
+#: Ratio stats for roles that are about balance rather than volume:
+#: name -> (numerator, other, label), computed as a / (a + b) from per-90
+#: values. A ratio is immune to a team simply having more of the ball.
+ROLE_RATIOS: dict[str, tuple[str, str, str]] = {
+        # How much of a player's progression comes from passing, not carrying.
+        "pass_share": ("prog_passes", "prog_carries", "Pass share of progression"),
+        # How much of his attacking threat is his own shots, not chances made.
+        "shot_share": ("npxg", "xa", "Shot share of threat"),
+}
+
+#: Share stats for roles that are about WHERE a player is on the ball:
+#: name -> (part, whole, label), computed as part / whole from per-90 values
+#: (the per-90 divisor cancels, so this is the season share). Raw zone counts
+#: grow with a team's possession; a share does not.
+ROLE_SHARES: dict[str, tuple[str, str, str]] = {
+        "touches_def_pen_share": ("touches_def_pen", "touches", "Share of touches in own box"),
+        "touches_def_third_share": ("touches_def_third", "touches", "Share of touches in def 3rd"),
+        "touches_mid_third_share": ("touches_mid_third", "touches", "Share of touches in mid 3rd"),
+        "touches_att_box_share": ("touches_att_box", "touches", "Share of touches in opp. box"),
+        # Mistakes per touch: a raw count punishes a player for simply having
+        # the ball a lot, which at a dominant team he always will.
+        "dispossessed_per_touch": ("dispossessed", "touches", "Dispossessed per touch"),
+        "miscontrols_per_touch": ("miscontrols", "touches", "Miscontrols per touch"),
+}
+
+#: On-ball volume scaled to a neutral 50% possession: name -> (stat, label),
+#: computed as stat * 50 / team_possession. The mirror of the defensive
+#: adjustment in features.possession_factor: a midfielder at a 68% team gets
+#: more of the ball because his team has it, not because of how he plays.
+ROLE_POSSESSION_ADJUSTED: dict[str, tuple[str, str]] = {
+        "passes_attempted_poss_adj": ("passes_attempted", "Passes Attempted (poss. adj.)"),
+        "passes_received_poss_adj": ("passes_received", "Passes Received (poss. adj.)"),
+        "touches_poss_adj": ("touches", "Touches (poss. adj.)"),
+        "prog_passes_poss_adj": ("prog_passes", "Prog. Passes (poss. adj.)"),
+}
+
+# Roles were chosen by hand and checked against the players each definition
+# ranks top in 2024-25 (reports/role_top_players.csv). Revised 2026-11-24:
+# new W and ST sets, Wide CB, Half-back and a screening Anchor for DM, a
+# Metronome-style CM deep-lying playmaker. Both deep-lying playmakers then
+# moved to per-touch mistakes, and the CM one to possession-adjusted volume
+# (its score had correlated +0.56 with team possession; now +0.36).
+# Next-season role agreement rose from 1.88x to 2.07x the rate expected by
+# chance.
+ROLES: dict[str, list[Role]] = {
+        "CB": [
+                Role("Ball-playing CB",
+                     high=("prog_passes", "passes_attempted", "pass_completion_pct",
+                           "pass_completion_long_pct", "prog_carries"),
+                     low=("clearances",)),
+                Role("No-nonsense CB",
+                     high=("clearances", "blocks", "shots_blocked", "aerials_won", "aerial_win_pct"),
+                     low=("passes_attempted",)),
+                # A ball-winner who is neither a liability nor a weapon in possession.
+                Role("CB",
+                     high=("tackles_won", "interceptions", "ball_recoveries", "dribblers_tackled_pct"),
+                     middle=("prog_passes", "pass_completion_pct")),
+                # The outside centre-back of a back three: steps out and joins attacks.
+                Role("Wide CB",
+                     high=("touches_att_third", "carries_into_final_third", "crosses",
+                           "prog_passes_received", "passes_into_final_third"),
+                     low=("touches_def_pen_share",)),
+        ],
+        "FB": [
+                Role("Overlapping wing-back",
+                     high=("crosses", "crosses_into_box", "prog_carries", "carries_into_final_third",
+                           "touches_att_third", "prog_passes_received", "xa", "sca")),
+                Role("Inverted full-back",
+                     high=("passes_attempted", "prog_passes", "pass_completion_pct", "touches_mid_third"),
+                     low=("crosses",)),
+                Role("Full-back",
+                     high=("tackles_plus_interceptions", "dribblers_tackled_pct", "ball_recoveries"),
+                     low=("touches_att_third", "crosses")),
+        ],
+        "DM": [
+                Role("Ball-winner",
+                     high=("tackles_plus_interceptions", "tackles_mid_third", "ball_recoveries",
+                           "fouls", "challenges_lost")),
+                # Breaks lines: long, progressive distribution.
+                Role("Deep-lying playmaker",
+                     high=("prog_passes", "prog_pass_distance", "long_passes_attempted",
+                           "pass_completion_long_pct", "switches", "passes_into_final_third"),
+                     low=("dispossessed_per_touch", "miscontrols_per_touch", "touches_att_box_share")),
+                # Drops in like a centre-back of a back three; short, safe passing.
+                Role("Half-back",
+                     high=("touches_def_third_share", "touches_def_pen_share", "clearances",
+                           "aerials_won", "pass_completion_short_pct", "pass_completion_pct"),
+                     low=("prog_pass_distance", "prog_passes_received", "touches_att_third")),
+                # Screens in front of the back line; short passing, wins the ball
+                # by position rather than by fouling.
+                Role("Anchor",
+                     high=("touches_mid_third_share", "interceptions", "passes_blocked_def", "blocks",
+                           "pass_completion_short_pct"),
+                     low=("prog_pass_distance", "fouls")),
+        ],
+        "CM": [
+                Role("Box-to-box",
+                     high=("tackles_plus_interceptions", "ball_recoveries", "touches_att_box", "npxg",
+                           "prog_carries")),
+                Role("Midfield playmaker",
+                     high=("prog_carries", "prog_carry_distance", "carries_into_final_third",
+                           "take_ons_succeeded"),
+                     low=("pass_share",)),
+                # The metronome: high-volume, secure circulation.
+                Role("Deep-lying playmaker",
+                     high=("passes_attempted_poss_adj", "passes_received_poss_adj", "touches_poss_adj",
+                           "pass_completion_short_pct", "pass_completion_medium_pct", "prog_passes_poss_adj"),
+                     low=("dispossessed_per_touch", "miscontrols_per_touch", "times_tackled_pct")),
+                Role("Advanced playmaker",
+                     high=("key_passes", "xa", "sca", "passes_into_box", "touches_att_third"),
+                     low=("tackles_plus_interceptions",)),
+        ],
+        "AM": [
+                Role("Second striker",
+                     high=("npxg", "shots", "touches_att_box", "prog_passes_received", "shot_share")),
+                Role("Advanced playmaker",
+                     high=("key_passes", "xa", "through_balls", "passes_into_box", "sca"),
+                     low=("shot_share",)),
+                Role("Channel midfielder",
+                     high=("take_ons_attempted", "take_ons_succeeded", "prog_carries", "carries_into_box",
+                           "fouls_drawn")),
+        ],
+        "W": [
+                Role("Traditional winger",
+                     high=("crosses", "crosses_into_box", "take_ons_attempted", "carries_into_final_third", "xa"),
+                     low=("npxg", "touches_att_box_share")),
+                Role("Inside forward",
+                     high=("npxg", "shots", "touches_att_box", "carries_into_box", "take_ons_succeeded",
+                           "sca_from_take_ons"),
+                     low=("crosses", "shot_distance")),
+                Role("Wide playmaker",
+                     high=("key_passes", "xa", "passes_into_box", "through_balls", "switches",
+                           "pass_completion_pct"),
+                     low=("take_ons_attempted", "dispossessed")),
+                Role("1v1 dribbler",
+                     high=("take_ons_attempted", "take_on_success_pct", "prog_carries", "fouls_drawn",
+                           "sca_from_take_ons"),
+                     low=("times_tackled_pct",)),
+        ],
+        "ST": [
+                Role("Poacher",
+                     high=("npxg", "npxg_per_shot", "goals", "shots_on_target_pct", "touches_att_box_share",
+                           "offsides"),
+                     low=("shot_distance", "passes_attempted", "touches_mid_third")),
+                Role("Target man",
+                     high=("aerials_won", "aerial_win_pct", "passes_received", "fouls_drawn"),
+                     low=("take_ons_attempted", "prog_carry_distance")),
+                Role("False 9",
+                     high=("touches_mid_third", "key_passes", "xa", "sca", "passes_attempted", "prog_passes"),
+                     low=("touches_att_box_share", "offsides")),
+                Role("Channel runner",
+                     high=("prog_passes_received", "carries_into_box", "take_ons_succeeded", "shots", "npxg"),
+                     low=("passes_attempted", "touches_mid_third")),
+        ],
+}
+
+#: A player whose second-best role scores within this many points of his best
+#: is labelled a hybrid ("Box-to-box / Midfield playmaker").
+ROLE_HYBRID_MARGIN: float = 5.0
+
+
+# ---------------------------------------------------------------------------
 # Similarity model
 # ---------------------------------------------------------------------------
 

@@ -49,6 +49,8 @@ PERCENTILES = PROCESSED / "percentiles.parquet"
 SIMILARITY = PROCESSED / "similarity.parquet"
 STYLE_MAP = PROCESSED / "style_map.parquet"
 VALUE_PREDICTIONS = PROCESSED / "value_predictions.parquet"
+ROLES = PROCESSED / "roles.parquet"              # best-fit role per player-season
+ROLE_SCORES = PROCESSED / "role_scores.parquet"  # every role score, long format
 
 # --- model artefacts (committed) ---
 SIMILARITY_MODELS = ARTIFACTS / "similarity_models.joblib"
@@ -73,6 +75,8 @@ VALUE_METRICS = REPORTS / "value_model_metrics.json"
 PCA_VARIANCE = REPORTS / "pca_explained_variance.csv"
 VALIDATION = REPORTS / "similarity_validation.json"
 UNDERVALUED = REPORTS / "undervalued_shortlist.csv"
+ROLE_STABILITY = REPORTS / "role_stability.csv"
+ROLE_TOP_PLAYERS = REPORTS / "role_top_players.csv"
 
 
 def ensure_dirs() -> None:
