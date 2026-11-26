@@ -117,7 +117,7 @@ Each group's stats are standardised and reduced with PCA, keeping enough compone
 
 _Centre-backs in two dimensions. The ball-playing CBs of possession sides (Gvardiol, Dias, Bastoni) gather in the lower left; the picture is for reading, and the neighbour search runs in PCA space._
 
-#### Style dimensions 
+#### Style dimensions
 
 | Group | PC1                           | PC2                                                                   | PC3                                   |
 | ----- | ----------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
@@ -365,7 +365,7 @@ The tests include a synthetic end-to-end run of every modelling stage, so index-
 └── requirements-pipeline.txt    Everything else: rebuild, figures, notebook, tests
 ```
 
-`data/processed/` and `artifacts/` are committed because Streamlit Community Cloud cannot run the pipeline; every file is kept well under GitHub's 100 MB limit.
+`data/processed/` is committed because Streamlit Community Cloud cannot run the pipeline, and the app reads it directly. `artifacts/` is committed so the validation notebook and the README figures run without refitting the models. Every file is kept well under GitHub's 100 MB limit.
 
 ---
 

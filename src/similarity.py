@@ -312,7 +312,7 @@ def own_season_ranks(models: dict[str, dict], seasons: dict[str, str]) -> pd.Dat
                 np.fill_diagonal(similarity, -np.inf)          # a row is never its own neighbour
 
                 players = pd.Series(model["players"])
-                for player, positions in players.groupby(players).groups.items():
+                for positions in players.groupby(players).groups.values():
                         if len(positions) < 2:
                                 continue
                         for i in positions:

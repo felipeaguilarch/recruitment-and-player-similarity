@@ -108,7 +108,7 @@ def build_player_seasons() -> pd.DataFrame:
                         })
 
         out = pd.DataFrame(rows)
-        for name, feature in config.FEATURES.items():
+        for feature in config.FEATURES.values():
                 column = concrete_column(feature.patterns[0])
                 if feature.per90:
                         out[column] = rng.gamma(2.0, 8.0, len(out)) * (out["nineties"] / 30.0)

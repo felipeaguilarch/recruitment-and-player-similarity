@@ -126,7 +126,7 @@ def synthetic_player_seasons() -> pd.DataFrame:
         # Synthetic raw FBref columns, named so that every catalogue pattern
         # resolves. Scaled to roughly realistic magnitudes: counting stats as
         # season totals, percentages as percentages.
-        for name, feature in config.FEATURES.items():
+        for feature in config.FEATURES.values():
                 column = concrete_column(feature.patterns[0])
                 if feature.per90:
                         frame[column] = rng.gamma(2.0, 8.0, len(frame)) * (frame["nineties"] / 30.0)
