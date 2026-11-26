@@ -39,6 +39,10 @@ ACCENT = "#0F6B4A"
 FLAG = "#A8481B"
 GRID = "#D8DED8"
 
+# The README's hero radar: Vitinha, PSG, 2024-25.
+# The data also has a Vitinha at Genoa, so name the player-season, not the player.
+RADAR_PLAYER = "Vitinha__2425__Paris_SG"
+
 plt.rcParams.update({
         "figure.dpi": 140,
         "savefig.dpi": 140,
@@ -95,9 +99,11 @@ def _eur_m(value: float, _position=None) -> str:
 def radar_figure(player_season_id: str | None = None) -> None:
         """Percentile radar for one player - the README's hero image.
 
-        Writes assets/radar_example.png. With no argument the player is the
-        highest-minutes player-season in the largest position group (ties
-        broken by id, so the default never changes between runs).
+        Writes assets/radar_example.png. With no argument the player is
+        RADAR_PLAYER, or, if that player-season is not in the data (the
+        synthetic test tables, say), the highest-minutes player-season in the
+        largest position group (ties broken by id, so the default never
+        changes between runs).
 
         Axes are the group's radar axes from config.GROUP_SPECS, minus any the
         player has no value for. The radial axis is fixed at 0-100 so two
@@ -110,6 +116,9 @@ def radar_figure(player_season_id: str | None = None) -> None:
         # player or looking up an explicitly requested player-season.
         percentiles = pd.read_parquet(paths.PERCENTILES)
         features = pd.read_parquet(paths.FEATURES)
+
+        if player_season_id is None and RADAR_PLAYER in set(features["player_season_id"].astype(str)):
+                player_season_id = RADAR_PLAYER
 
         if player_season_id is None:
                 # "Largest group" means the most data-rich peer population.

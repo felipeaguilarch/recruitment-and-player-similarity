@@ -2,11 +2,11 @@
 
 Find players who play like the one you are losing, across Europe's five big leagues, and see which of them the market prices below their profile.
 
-**Live app:** _link added after deployment to Streamlit Community Cloud_
+**Live app:** [recruitment-player-similarity-proyect.streamlit.app](https://recruitment-player-similarity-proyect.streamlit.app/), no install needed
 
 <p align="center">
   <img src="assets/radar_example.png" width="560"
-       alt="Percentile radar for Federico Baschirotto, Lecce, 2024-25, against that season's centre-backs">
+       alt="Percentile radar for Vitinha, Paris Saint-Germain, 2024-25, against that season's defensive midfielders">
 </p>
 
 |                         |                                                                                                                                        |
