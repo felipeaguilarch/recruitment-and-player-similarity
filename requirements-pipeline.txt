@@ -1,0 +1,24 @@
+# Everything needed to rebuild the data, fit the models, draw the README
+# figures, run the notebook and run the tests. The app alone needs only
+# requirements.txt.
+#
+#     pip install -r requirements-pipeline.txt
+
+-r requirements.txt
+
+scikit-learn>=1.5
+joblib>=1.4
+
+soccerdata>=1.9.0        # FBref season stats (see src/fbref_extra.py)
+lxml>=5.0                # parses the archived FBref pages
+rapidfuzz>=3.9           # FBref <-> Transfermarkt name matching
+requests>=2.31
+
+matplotlib>=3.8          # static figures for the README
+
+# UMAP powers the 2-D style map only; the nearest-neighbour search never
+# uses it. Without it the style map falls back to the first two PCA
+# components, which would change the committed style_map.parquet.
+umap-learn>=0.5.6
+
+pytest>=8.0

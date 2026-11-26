@@ -9,13 +9,13 @@ Find players who play like the one you are losing, across Europe's five big leag
        alt="Percentile radar for Federico Baschirotto, Lecce, 2024-25, against that season's centre-backs">
 </p>
 
-|                         |                                                                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Comparables**   | Cosine nearest neighbours on PCA style scores, within position group                                                              |
-| **Style profile** | Percentile radar against the same position group and season                                                                       |
-| **Playing role**  | Best-fit role per player-season - Deep-lying playmaker, Overlapping wing-back, False 9 - from hand-picked stat profiles           |
-| **Value flag**    | Out-of-fold residual from an expected-market-value model                                                                          |
-| **Filters**       | Position, role, season, candidate seasons, leagues, age, budget range, minutes                                                    |
+|                         |                                                                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Comparables**   | Cosine nearest neighbours on PCA style scores, within position group                                                                   |
+| **Style profile** | Percentile radar against the same position group and season                                                                            |
+| **Playing role**  | Best-fit role per player-season - Deep-lying playmaker, Overlapping wing-back, False 9 - from hand-picked stat profiles                |
+| **Value flag**    | Out-of-fold residual from an expected-market-value model                                                                               |
+| **Filters**       | Position, role, season, candidate seasons, leagues, age, budget range, minutes                                                         |
 | **Data**          | 3,768 player-seasons: Premier League, La Liga, Serie A, Bundesliga, and Ligue 1 in 2022-23 and 2024-25; Premier League only in 2023-24 |
 
 ### Headline results
@@ -47,7 +47,7 @@ The first finding is negative, and worth stating: **nobody in that pool is close
 - **Álex Jiménez - discarded.** Right-footed, and a wing-back who carries (97th percentile) far more than he crosses (54th): he drives the ball forward rather than delivering it from the byline.
 - **Nathaniel Brown - the one to scout.** Left-footed, five and a half years of contract, and close on the end product that defines the role: crosses 82nd percentile, xA 94th, key passes 93rd, tackles plus interceptions 85th. He carries less (64th) and beats his man less often (take-on success 23rd), so he delivers from the byline after the ball reaches him rather than driving it there himself. The model values him at €15.5m against a €8m market value; Transfermarkt had him at €22m by July 2025.
 
-**What goes to the scout:** player to scout is Nathaniel Brown from Frankfurt. Statwise the player looks similar to Antonee Robinson. There are a few things that the metrics can't quantify such as his work rate and if he is used to playing similarly to how we play at the club tactically. Also important to reach out to his agent about transfer, to get an idea of how much would the fee and salary be.
+**What goes to the scout:** player to scout is Nathaniel Brown from Frankfurt. He is not a perfect fit, but is the closest we can get to replace a player like Antonee Robinson. There are a few things that the metrics can't quantify such as his work rate and if he is used to playing similarly to how we play at the club tactically. Also important to reach out to his agent about transfer, to get an idea of how much would the fee and salary be.
 
 ### Hindsight check: the same brief in 2023
 
@@ -117,7 +117,7 @@ Each group's stats are standardised and reduced with PCA, keeping enough compone
 
 _Centre-backs in two dimensions. The ball-playing CBs of possession sides (Gvardiol, Dias, Bastoni) gather in the lower left; the picture is for reading, and the neighbour search runs in PCA space._
 
-#### Style dimensions _(draft names - read `reports/pca_loadings.csv` and rename in your own words)_
+#### Style dimensions 
 
 | Group | PC1                           | PC2                                                                   | PC3                                   |
 | ----- | ----------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
@@ -262,7 +262,7 @@ Only one replacement was a top-25 comparable *before* the move: Cherki, 12th of 
 | Rodri (2022-23)            | Partey, Bentaleb, Busquets, Santamaria, Højbjerg | Deep controllers that like to control the game. Hit.                                                                                                                                                            |
 | Van Dijk (2024-25)         | Tah, Alexsandro, Rrahmani, de Vrij                | Composed centre-backs from possession sides. Hit.                                                                                                                                                               |
 | Salah (2024-25)            | Mané, Martinelli, Greenwood, Lookman, Barcola    | Wingers who look to score first and pass second, also known as inside forwards. Hit.                                                                                                                            |
-| Haaland (2024-25)          | Moukoko, Sørloth, Watkins, Lewandowski           | Classic strikers, great first touch, dominate physically and good finishers. Hit.                                                                                                                               |
+| Haaland (2024-25)          | Moukoko, Sørloth, Watkins, Lewandowski           | Classic strikers, who specialize their game in finishing. Hit.                                                                                                                                                  |
 | Alexander-Arnold (2024-25) | Trippier, Frankowski, Alba, Biraghi, Porro        | **Miss.** The full-back stats see crossing volume and chance creation, but nothing records *where* a pass is played from, so a full-back who inverts to play long switches looks like a byline crosser. |
 
 ---
@@ -288,15 +288,17 @@ git clone https://github.com/felipeaguilarch/recruitment-and-player-similarity.g
 cd recruitment-and-player-similarity
 python -m venv .venv
 .venv\Scripts\activate            # Windows  (macOS / Linux: source .venv/bin/activate)
-pip install -r requirements.txt
+pip install -r requirements.txt   # the app's five packages only
 
 streamlit run app.py              # the app reads the committed data; no pipeline run needed
 ```
 
 To rebuild everything from the committed intermediate data, offline, in about
-eight minutes:
+eight minutes, install the pipeline's packages too (scikit-learn, UMAP, the
+scrapers, matplotlib, pytest) and run every stage from `merge` onward:
 
 ```bash
+pip install -r requirements-pipeline.txt
 python run_pipeline.py --stage all --from-stage merge --force
 ```
 
@@ -318,7 +320,7 @@ python run_pipeline.py --stage all --from-stage merge --force
 
 ```bash
 python run_pipeline.py --list
-pytest -q                         # runs on a clean clone, no data needed
+pytest -q                         # needs requirements-pipeline.txt; no data needed
 ```
 
 The tests include a synthetic end-to-end run of every modelling stage, so index-alignment bugs - the classic one is treating `kneighbors`' positional indices as player ids - fail in seconds rather than after a pipeline run.
@@ -358,7 +360,9 @@ The tests include a synthetic end-to-end run of every modelling stage, so index-
 ├── assets/                      README figures, built by src/figures.py
 ├── reports/                     Evidence the pipeline behaved: coverage, joins, PCA, metrics
 ├── notebooks/validation.ipynb   Every validation number above
-└── tests/                       Smoke tests and a synthetic end-to-end run
+├── tests/                       Smoke tests, a synthetic end-to-end run, a deploy guard
+├── requirements.txt             What the app needs (all Streamlit Community Cloud installs)
+└── requirements-pipeline.txt    Everything else: rebuild, figures, notebook, tests
 ```
 
 `data/processed/` and `artifacts/` are committed because Streamlit Community Cloud cannot run the pipeline; every file is kept well under GitHub's 100 MB limit.

@@ -1,27 +1,21 @@
-# Versions below are the ones verified working on the development machine
-# (Python 3.14.5, Windows). Lower bounds rather than exact pins, because
-# Streamlit Community Cloud may build on a different Python minor version.
+# What the Streamlit app needs, and nothing more.
 #
-# BEFORE DEPLOYING: create an exact lock from a clean venv so the server
-# installs what you tested:
-#     pip freeze > requirements.lock.txt
-# and point the Community Cloud app at that file if a build ever drifts.
+# The app only reads the committed parquet tables in data/processed/, so it
+# never touches scikit-learn, UMAP or the scrapers. Streamlit Community Cloud
+# installs exactly this file (it cannot be pointed at another one), so keeping
+# it short keeps the build fast and gives it fewer packages that can fail.
+#
+# To rebuild the data, fit the models or run the tests, install
+# requirements-pipeline.txt instead; it includes this file.
+#
+# tests/test_requirements.py fails if app.py, or any src module it imports,
+# starts using a package that is missing here.
+#
+# Lower bounds rather than exact pins, verified on Python 3.14.5 (Windows):
+# Community Cloud may build on a different Python minor version.
 
+streamlit>=1.67          # app.py uses width="stretch" (use_container_width is deprecated)
 pandas>=2.2
 numpy>=1.26
 pyarrow>=15.0            # parquet engine
-scikit-learn>=1.5
-joblib>=1.4
-
-soccerdata>=1.9.0        # FBref season stats (see src/fbref_extra.py)
-rapidfuzz>=3.9           # FBref <-> Transfermarkt name matching
-requests>=2.31
-
-streamlit>=1.67         # app.py uses width="stretch" (use_container_width is deprecated)
 plotly>=5.22
-
-matplotlib>=3.8          # static figures for the README
-
-# Optional. UMAP powers the 2-D style map only; the app degrades gracefully
-# without it and the nearest-neighbour search never uses it.
-umap-learn>=0.5.6
